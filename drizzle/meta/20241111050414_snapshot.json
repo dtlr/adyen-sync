@@ -1,0 +1,451 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.pay_assigned_payment_device": {
+      "name": "pay_assigned_payment_device",
+      "schema": "",
+      "columns": {
+        "device_id": {
+          "name": "device_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "business_unit_id": {
+          "name": "business_unit_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_device_id": {
+          "name": "payment_device_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permanent_flag": {
+          "name": "permanent_flag",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "create_time": {
+          "name": "create_time",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "create_by": {
+          "name": "create_by",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'system'"
+        },
+        "last_update_time": {
+          "name": "last_update_time",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "last_update_by": {
+          "name": "last_update_by",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'system'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "pay_assigned_payment_device_pkey": {
+          "name": "pay_assigned_payment_device_pkey",
+          "columns": [
+            "device_id",
+            "business_unit_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.pay_payment_devices": {
+      "name": "pay_payment_devices",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "business_unit_id": {
+          "name": "business_unit_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "config_name": {
+          "name": "config_name",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "server_address": {
+          "name": "server_address",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "terminal_id": {
+          "name": "terminal_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_order": {
+          "name": "display_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "shared_flag": {
+          "name": "shared_flag",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "create_time": {
+          "name": "create_time",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "create_by": {
+          "name": "create_by",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'system'"
+        },
+        "last_update_time": {
+          "name": "last_update_time",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "last_update_by": {
+          "name": "last_update_by",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'system'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "pay_payment_devices_pkey": {
+          "name": "pay_payment_devices_pkey",
+          "columns": [
+            "id",
+            "business_unit_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.dev_device_personalization": {
+      "name": "dev_device_personalization",
+      "schema": "",
+      "columns": {
+        "device_name": {
+          "name": "device_name",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "server_url": {
+          "name": "server_url",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "server_address": {
+          "name": "server_address",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "server_port": {
+          "name": "server_port",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "device_id": {
+          "name": "device_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "app_id": {
+          "name": "app_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_device_id": {
+          "name": "parent_device_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_app_id": {
+          "name": "parent_app_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "business_unit_id": {
+          "name": "business_unit_id",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ssl_enabled_flag": {
+          "name": "ssl_enabled_flag",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failover_address1": {
+          "name": "failover_address1",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failover_port1": {
+          "name": "failover_port1",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failover_address2": {
+          "name": "failover_address2",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failover_port2": {
+          "name": "failover_port2",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failover_address3": {
+          "name": "failover_address3",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failover_port3": {
+          "name": "failover_port3",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failover_server_url1": {
+          "name": "failover_server_url1",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failover_server_url2": {
+          "name": "failover_server_url2",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "failover_server_url3": {
+          "name": "failover_server_url3",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "create_time": {
+          "name": "create_time",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "create_by": {
+          "name": "create_by",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'system'"
+        },
+        "last_update_time": {
+          "name": "last_update_time",
+          "type": "timestamp(6)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "last_update_by": {
+          "name": "last_update_by",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'system'"
+        },
+        "tag_app_id": {
+          "name": "tag_app_id",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'*'"
+        },
+        "tag_business_unit_id": {
+          "name": "tag_business_unit_id",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'*'"
+        },
+        "tag_brand": {
+          "name": "tag_brand",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'*'"
+        },
+        "tag_device_id": {
+          "name": "tag_device_id",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'*'"
+        },
+        "tag_country": {
+          "name": "tag_country",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'*'"
+        },
+        "tag_state": {
+          "name": "tag_state",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'*'"
+        },
+        "tag_store_type": {
+          "name": "tag_store_type",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'*'"
+        },
+        "tag_device_type": {
+          "name": "tag_device_type",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'*'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "dev_device_personalization_pkey": {
+          "name": "dev_device_personalization_pkey",
+          "columns": [
+            "device_name",
+            "tag_app_id",
+            "tag_business_unit_id",
+            "tag_brand",
+            "tag_device_id",
+            "tag_country",
+            "tag_state",
+            "tag_store_type",
+            "tag_device_type"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {
+    "public.upt_mgmt_target_version_id_seq": {
+      "name": "upt_mgmt_target_version_id_seq",
+      "schema": "public",
+      "startWith": "1",
+      "minValue": "1",
+      "maxValue": "9223372036854775807",
+      "increment": "1",
+      "cycle": false,
+      "cache": "1"
+    },
+    "public.upt_mgmt_installation_id_seq": {
+      "name": "upt_mgmt_installation_id_seq",
+      "schema": "public",
+      "startWith": "1",
+      "minValue": "1",
+      "maxValue": "9223372036854775807",
+      "increment": "1",
+      "cycle": false,
+      "cache": "1"
+    },
+    "public.sym_data_data_id_seq": {
+      "name": "sym_data_data_id_seq",
+      "schema": "public",
+      "startWith": "1",
+      "minValue": "1",
+      "maxValue": "9223372036854775807",
+      "increment": "1",
+      "cycle": false,
+      "cache": "1"
+    }
+  },
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {}
+  }
+}

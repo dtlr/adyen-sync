@@ -1,0 +1,37 @@
+{
+  "name": "adyen-sync",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "clean": "rm -rf node_modules .cache dist"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.36.1",
+    "hono": "^4.6.9",
+    "pg": "^8.11.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/plugin-kit": ">= 0.2.3",
+    "@nwlnexus/config": "^1.2.0",
+    "@types/node": "^20.17.6",
+    "@types/pg": "^8.11.10",
+    "@vitest/coverage-v8": "^2.1.4",
+    "drizzle-kit": "^0.28.0",
+    "eslint": "^9.14.0",
+    "msw": "^2.6.4",
+    "prettier": "^3.3.3",
+    "tsx": "^4.7.1",
+    "typescript": "^5.6.3",
+    "vite-tsconfig-paths": "^5.1.2",
+    "vitest": "^2.1.4"
+  },
+  "overrides": {
+    "eslint": "^9.14.0"
+  }
+}
