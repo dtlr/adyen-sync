@@ -20,9 +20,11 @@ export const fetchAdyenData = async (
     type?: "stores" | "terminals";
     page?: number;
     pageSize?: number;
-  } = {}
+  } = {},
 ) => {
-  const { ADYEN_KEY, APP_ENV } = env<typeof c.env>(c);
+  const { ADYEN_KEY_LIVE, ADYEN_KEY_TEST, APP_ENV } = env<typeof c.env>(c);
+  const adyenKey =
+    APP_ENV.toLowerCase() == "prod" ? ADYEN_KEY_LIVE : ADYEN_KEY_TEST;
   const adyenEndpoint =
     APP_ENV.toLowerCase() === "prod" ? "management-live" : "management-test";
   try {
@@ -39,7 +41,7 @@ export const fetchAdyenData = async (
       >(query, {
         headers: {
           "Content-Type": "application/json",
-          "X-API-key": ADYEN_KEY,
+          "X-API-key": adyenKey,
         },
       });
       pagesTotal = response.data.pagesTotal;
@@ -51,7 +53,7 @@ export const fetchAdyenData = async (
     return data;
   } catch (error) {
     throw new AdyenSyncError({
-      name: "ADYEN API",
+      name: "ADYEN_API",
       message: "Error in the fetch call to Adyen API",
       cause: error,
     });
