@@ -59,6 +59,7 @@ jobs:
           tags: |
             type=sha
             type=ref,event=branch
+            type=ref,event=tag
             type=edge,enable=true,priority=700,branch=$repo.default_branch
 
       - name: Build and push
