@@ -31,4 +31,5 @@ node_modules
 dist
 tsconfig.tsbuildinfo
 
-.terraform/
+**/*.out
+**/.terraform/

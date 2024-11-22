@@ -1,6 +1,5 @@
 import { serve } from "@hono/node-server";
-import { Hono } from "hono";
-import { logger } from "hono/logger";
+import { Hono, type Context } from "hono";
 import { prettyJSON } from "hono/pretty-json";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
@@ -16,11 +15,32 @@ import {
 } from "./types.js";
 import { showRoutes } from "hono/dev";
 import { fetchAdyenData } from "./adyen.js";
-import { customLogger, parseStoreRef } from "./utils.js";
+import { parseStoreRef } from "./utils.js";
 import { updateDatabase } from "./db.js";
+import { createLogger, format, config,transports } from "winston";
+
+const getRequestId = (c: Context) => {
+  return format((info, opts) => {
+    info.requestId = c.get("requestId");
+    return info;
+  });
+};
+
+const logger = createLogger({
+  levels: config.syslog.levels,
+  level: process.env.LOG_LEVEL || "info",
+  defaultMeta: { service: "adyen-sync" },
+  transports: [new transports.Console({ forceConsole: true })],
+  format: format.combine(
+    format.timestamp(),
+    format.errors({ stack: true }),
+    format.json()
+  ),
+});
+
 const app = new Hono();
+
 app.use("*", requestId());
-app.use(logger());
 app.use(
   "*",
   etag({
@@ -32,6 +52,10 @@ app.use("*", cors());
 app.use("*", secureHeaders());
 
 app.get("/readyz", (c) => {
+  // logger.info({
+  //   message: "Received request",
+  //   requestId: c.get("requestId"),
+  // });
   return c.json({ status: "ok" });
 });
 
@@ -50,11 +74,11 @@ app.post("/callback/adyen", async (c) => {
       },
     });
   }
-  console.log(
-    "Received request",
-    c.get("requestId"),
-    JSON.stringify(parsedBody.data),
-  );
+  logger.info({
+    message: "Received request",
+    requestId: c.get("requestId"),
+    body: parsedBody.data,
+  });
   return c.json({ requestId: c.get("requestId") });
 });
 
@@ -105,13 +129,16 @@ app.get("/fleet", async (c) => {
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
+    logger.error(err);
     return c.json(
       { message: err.message, requestId: c.get("requestId") },
       err.status,
     );
   } else if (err instanceof AdyenSyncError) {
-    return c.json(err, 400);
+    logger.error(err);
+    return c.json({ message: err.message, requestId: c.get("requestId") }, 400);
   } else {
+    logger.error(err);
     return c.json(
       {
         name: "UNHANDLED_ERROR",
