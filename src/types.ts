@@ -7,7 +7,8 @@ export type Bindings = {
   DB_PORT: string;
   DB_USER: string;
   DB_PASSWORD: string;
-  DB_NAME: string;
+  ADYEN_KEY_TEST: string;
+  ADYEN_KEY_LIVE: string;
 };
 
 export type AdyenTerminalsResponse = {
