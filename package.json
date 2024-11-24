@@ -2,14 +2,21 @@
   "name": "adyen-sync",
   "type": "module",
   "version": "0.0.1",
+  "author": "Nigel Williams-Lucas <nwilliams-lucas@dtlr.com>",
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "dev": "tsx watch src/index.ts",
-    "clean": "rm -rf node_modules .cache dist"
+    "clean": "rm -rf node_modules .cache dist",
+    "cf:dev": "npm run dev && npx cloudflared tunnel --url http://localhost:3000",
+    "neon:create": "node scripts/create.js",
+    "neon:generate": "node scripts/generate.js",
+    "neon:migrate": "node scripts/migrate.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@neondatabase/api-client": "^1.10.3",
     "axios": "^1.7.7",
+    "commander": "^12.1.0",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.36.1",
     "hono": "^4.6.9",

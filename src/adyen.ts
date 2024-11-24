@@ -6,12 +6,11 @@ import type {
 } from "./types.js";
 
 import type { AdyenStoresResponse } from "./types.js";
-import type { Context } from "hono";
-import { env } from "hono/adapter";
 import { AdyenSyncError } from "./error.js";
+import { ADYEN_KEY } from "./index.js";
+import { ADYEN_KEY_LIVE, ADYEN_KEY_TEST, APP_ENV } from "./index.js";
 
 export const fetchAdyenData = async (
-  c: Context,
   {
     type = "stores",
     page = 1,
@@ -22,11 +21,13 @@ export const fetchAdyenData = async (
     pageSize?: number;
   } = {},
 ) => {
-  const { ADYEN_KEY_LIVE, ADYEN_KEY_TEST, APP_ENV } = env<typeof c.env>(c);
-  const adyenKey =
-    APP_ENV.toLowerCase() == "prod" ? ADYEN_KEY_LIVE : ADYEN_KEY_TEST;
+  const adyenKey = ADYEN_KEY
+    ? ADYEN_KEY
+    : APP_ENV?.toLowerCase() === "prod"
+    ? ADYEN_KEY_LIVE
+    : ADYEN_KEY_TEST;
   const adyenEndpoint =
-    APP_ENV.toLowerCase() === "prod" ? "management-live" : "management-test";
+    APP_ENV?.toLowerCase() === "prod" ? "management-live" : "management-test";
   try {
     let pagesTotal: number;
     let data: (StoreData | TerminalData)[] = [];

@@ -24,6 +24,7 @@ export class ErrorBase<T extends string> extends Error {
 }
 
 type ErrorName =
+  | "ADYEN_CONFIG_MISSING"
   | "ROUTE_ADYEN_WEBBHOOK"
   | "UPDATE_DATABASE"
   | "DATABASE_CONFIG_MISSING"

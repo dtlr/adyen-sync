@@ -1,5 +1,5 @@
 import { serve } from "@hono/node-server";
-import { Hono, type Context } from "hono";
+import { Hono } from "hono";
 import { prettyJSON } from "hono/pretty-json";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
@@ -17,28 +17,50 @@ import { showRoutes } from "hono/dev";
 import { fetchAdyenData } from "./adyen.js";
 import { parseStoreRef } from "./utils.js";
 import { updateDatabase } from "./db.js";
-import { createLogger, format, config,transports } from "winston";
+import { logger } from "./utils.js";
 
-const getRequestId = (c: Context) => {
-  return format((info, opts) => {
-    info.requestId = c.get("requestId");
-    return info;
-  });
-};
-
-const logger = createLogger({
-  levels: config.syslog.levels,
-  level: process.env.LOG_LEVEL || "info",
-  defaultMeta: { service: "adyen-sync" },
-  transports: [new transports.Console({ forceConsole: true })],
-  format: format.combine(
-    format.timestamp(),
-    format.errors({ stack: true }),
-    format.json()
-  ),
-});
+export const {
+  DATABASE_URL,
+  DB_USER,
+  DB_PASSWORD,
+  DB_HOST,
+  DB_PORT,
+  APP_PORT,
+  APP_ENV,
+  ADYEN_KEY,
+  ADYEN_KEY_TEST,
+  ADYEN_KEY_LIVE,
+} = process.env;
 
 const app = new Hono();
+
+if (!DATABASE_URL && (!DB_USER || !DB_PASSWORD || !DB_HOST))
+throw new AdyenSyncError({
+  name: "DATABASE_CONFIG_MISSING",
+  message: "Database configuration is missing.",
+  cause: {
+    DATABASE_URL: DATABASE_URL
+      ? "Has value but is being treated as secure"
+      : "Missing",
+    DB_USER: DB_USER ? DB_USER : "Missing",
+    DB_PASSWORD: DB_PASSWORD
+      ? "Has value but is being treated as secure"
+      : "Missing",
+    DB_HOST: DB_HOST ? DB_HOST : "Missing",
+    DB_PORT: DB_PORT ? DB_PORT : "Missing",
+    },
+  });
+
+if (!ADYEN_KEY && (!ADYEN_KEY_TEST || !ADYEN_KEY_LIVE))
+  throw new AdyenSyncError({
+    name: "ADYEN_CONFIG_MISSING",
+    message: "Adyen configuration is missing.",
+    cause: {
+      ADYEN_KEY: ADYEN_KEY ? "Has value but is being treated as secure" : "Missing",
+      ADYEN_KEY_TEST: ADYEN_KEY_TEST ? "Has value but is being treated as secure" : "Missing",
+      ADYEN_KEY_LIVE: ADYEN_KEY_LIVE ? "Has value but is being treated as secure" : "Missing",
+    },
+  });
 
 app.use("*", requestId());
 app.use(
@@ -83,8 +105,8 @@ app.post("/callback/adyen", async (c) => {
 });
 
 app.get("/fleet", async (c) => {
-  const stores = (await fetchAdyenData(c)) as StoreData[];
-  const terminals = (await fetchAdyenData(c, {
+  const stores = (await fetchAdyenData()) as StoreData[];
+  const terminals = (await fetchAdyenData({
     type: "terminals",
   })) as TerminalData[];
   const mposDevices = terminals.filter(
@@ -120,7 +142,7 @@ app.get("/fleet", async (c) => {
       });
     jmData.push([mposDevice.id, storeRef?.prefix, storeRef?.number]);
   }
-  await updateDatabase(c, jmData);
+  await updateDatabase(jmData);
   return c.json(
     { requestId: c.get("requestId"), message: "Fleet is going to be synced" },
     200,
@@ -150,13 +172,9 @@ app.onError((err, c) => {
   }
 });
 
-showRoutes(app, {
-  verbose: true,
-});
-
-const port = parseInt(process.env.APP_PORT || "3000");
-console.log(`Server is running on ${port}`);
-console.log(`App environment: ${process.env.APP_ENV}`);
+const port = parseInt(APP_PORT || "3000");
+logger.info(`Server is running on ${port}`);
+logger.info(`App environment: ${APP_ENV}`);
 
 serve({
   fetch: app.fetch,
