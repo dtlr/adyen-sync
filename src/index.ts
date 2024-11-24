@@ -38,7 +38,7 @@ const logger = createLogger({
   ),
 });
 
-const app = new Hono();
+export const app = new Hono();
 
 app.use("*", requestId());
 app.use(
