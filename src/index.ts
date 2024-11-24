@@ -67,7 +67,7 @@ app.use(
   "*",
   etag({
     retainedHeaders: ["x-message", ...RETAINED_304_HEADERS],
-  })
+  }),
 );
 app.use(prettyJSON());
 app.use("*", cors());
@@ -112,12 +112,12 @@ app.get("/fleet", async (c) => {
   const mposDevices = terminals.filter(
     (terminal) =>
       terminal.model === "S1E2L" &&
-      terminal.assignment.status.toLowerCase() === "boarded"
+      terminal.assignment.status.toLowerCase() === "boarded",
   );
   const jmData: [string, string, string][] = [];
   for (const mposDevice of mposDevices) {
     const store = stores.find(
-      (store) => store.id === mposDevice.assignment.storeId
+      (store) => store.id === mposDevice.assignment.storeId,
     );
     if (!store?.reference)
       throw new AdyenSyncError({
@@ -145,7 +145,7 @@ app.get("/fleet", async (c) => {
   await updateDatabase(jmData);
   return c.json(
     { requestId: c.get("requestId"), message: "Fleet is going to be synced" },
-    200
+    200,
   );
 });
 
@@ -154,7 +154,7 @@ app.onError((err, c) => {
     logger.error(err);
     return c.json(
       { message: err.message, requestId: c.get("requestId") },
-      err.status
+      err.status,
     );
   } else if (err instanceof AdyenSyncError) {
     logger.error(err);
@@ -167,7 +167,7 @@ app.onError((err, c) => {
         message: "Error caught",
         requestId: c.get("requestId"),
       },
-      500
+      500,
     );
   }
 });

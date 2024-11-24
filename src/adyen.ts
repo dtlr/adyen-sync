@@ -19,7 +19,7 @@ export const fetchAdyenData = async (
     type?: "stores" | "terminals";
     page?: number;
     pageSize?: number;
-  } = {}
+  } = {},
 ) => {
   const adyenKey = ADYEN_KEY
     ? ADYEN_KEY
@@ -54,7 +54,7 @@ export const fetchAdyenData = async (
     return data;
   } catch (error) {
     throw new AdyenSyncError({
-      name: "ADYEN API",
+      name: "ADYEN_API",
       message: "Error in the fetch call to Adyen API",
       cause: error,
     });

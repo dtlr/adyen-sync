@@ -28,6 +28,6 @@ type ErrorName =
   | "ROUTE_ADYEN_WEBBHOOK"
   | "UPDATE_DATABASE"
   | "DATABASE_CONFIG_MISSING"
-  | "ADYEN API"
+  | "ADYEN_API"
   | "ROUTE_FLEET";
 export class AdyenSyncError extends ErrorBase<ErrorName> {}
