@@ -2,15 +2,14 @@
   "extends": ["@nwlnexus/config/typescript"],
   "compilerOptions": {
     "target": "esnext",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "strict": true,
-    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "types": ["node", "zod"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "rootDir": "./src",
+    "verbatimModuleSyntax": false,
     "outDir": "./dist",
     "noEmit": false,
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
