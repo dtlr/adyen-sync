@@ -10,7 +10,8 @@
     "cf:dev": "npm run dev && npx cloudflared tunnel --url http://localhost:3000",
     "neon:create": "node scripts/create.js",
     "neon:generate": "node scripts/generate.js",
-    "neon:migrate": "node scripts/migrate.js"
+    "neon:migrate": "node scripts/migrate.js",
+    "test": "vitest"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
@@ -37,7 +38,7 @@
     "tsx": "^4.7.1",
     "typescript": "^5.6.3",
     "vite-tsconfig-paths": "^5.1.2",
-    "vitest": "^2.1.4"
+    "vitest": "^2.1.5"
   },
   "overrides": {
     "eslint": "^9.14.0"

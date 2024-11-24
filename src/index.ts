@@ -32,7 +32,7 @@ export const {
   ADYEN_KEY_LIVE,
 } = process.env;
 
-const app = new Hono();
+export const app = new Hono();
 
 if (!DATABASE_URL && (!DB_USER || !DB_PASSWORD || !DB_HOST))
 throw new AdyenSyncError({
