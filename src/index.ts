@@ -93,42 +93,58 @@ app.post('/callback/adyen', async (c) => {
 })
 
 app.get('/fleet', async (c) => {
-  const stores = (await fetchAdyenData()) as StoreData[]
+  const stores = (await fetchAdyenData({
+    requestId: c.get('requestId'),
+    opts: {
+      type: 'stores',
+    },
+  })) as StoreData[]
   const terminals = (await fetchAdyenData({
-    type: 'terminals',
+    requestId: c.get('requestId'),
+    opts: {
+      type: 'terminals',
+    },
   })) as TerminalData[]
   const mposDevices = terminals.filter(
     (terminal) =>
-      terminal.model === 'S1E2L' && terminal.assignment.status.toLowerCase() === 'boarded',
+      terminal.model === 'S1E2L' && terminal.assignment.status.toLowerCase() != 'inventory',
   )
   const jmData: [string, string, string][] = []
   for (const mposDevice of mposDevices) {
     const store = stores.find((store) => store.id === mposDevice.assignment.storeId)
-    if (!store?.reference)
-      throw new AdyenSyncError({
+    if (!store?.reference) {
+      logger.error({
         requestId: c.get('requestId'),
         name: 'ROUTE_FLEET',
+        area: 'Store reference processing',
         message: 'Unable to find store reference',
-        cause: {
-          stores,
-          mposDevice,
-        },
+        store,
+        stores,
+        mposDevice,
       })
-
+      continue
+    }
     const storeRef = parseStoreRef(store.reference)
-    if (!storeRef?.prefix || !storeRef?.number)
-      throw new AdyenSyncError({
+    if (!storeRef?.prefix || !storeRef?.number) {
+      logger.error({
         requestId: c.get('requestId'),
         name: 'ROUTE_FLEET',
-        message: 'Store reference processing',
-        cause: {
-          message: `Store ${store.id} reference, ${store.reference}, is not in the expected format.`,
-        },
+        area: 'Store reference processing',
+        message: `Store ${store.id} reference, ${store.reference}, is not in the expected format.`,
       })
-    jmData.push([mposDevice.id, storeRef?.prefix, storeRef?.number])
+      continue
+    }
+    jmData.push([mposDevice.id, storeRef.prefix, storeRef.number])
   }
-  await updateDatabase(jmData)
-  return c.json({ requestId: c.get('requestId'), message: 'Fleet is going to be synced' }, 200)
+  await updateDatabase({ requestId: c.get('requestId'), data: jmData })
+  return c.json(
+    {
+      requestId: c.get('requestId'),
+      message: 'Fleet is going to be synced',
+      data: jmData,
+    },
+    202,
+  )
 })
 
 app.onError((err, c) => {
