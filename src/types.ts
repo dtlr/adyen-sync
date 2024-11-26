@@ -1,99 +1,99 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 export type Bindings = {
-  APP_ENV: "PROD" | "prod" | "QA" | "qa" | "DEV" | "dev" | undefined;
-  DATABASE_URL?: string;
-  DB_HOST: string;
-  DB_PORT: string;
-  DB_USER: string;
-  DB_PASSWORD: string;
-  ADYEN_KEY_TEST: string;
-  ADYEN_KEY_LIVE: string;
-};
+  APP_ENV: 'PROD' | 'prod' | 'QA' | 'qa' | 'DEV' | 'dev' | undefined
+  DATABASE_URL?: string
+  DB_HOST: string
+  DB_PORT: string
+  DB_USER: string
+  DB_PASSWORD: string
+  ADYEN_KEY_TEST: string
+  ADYEN_KEY_LIVE: string
+}
 
 export type AdyenTerminalsResponse = {
-  _links: Links;
-  itemsTotal: number;
-  pagesTotal: number;
-  data: TerminalData[];
-};
+  _links: Links
+  itemsTotal: number
+  pagesTotal: number
+  data: TerminalData[]
+}
 
 export type AdyenStoresResponse = {
-  _links: Links;
-  itemsTotal: number;
-  pagesTotal: number;
-  data: StoreData[];
-};
+  _links: Links
+  itemsTotal: number
+  pagesTotal: number
+  data: StoreData[]
+}
 
 interface Links {
   first: {
-    href: string;
-  };
+    href: string
+  }
   last: {
-    href: string;
-  };
+    href: string
+  }
   next: {
-    href: string;
-  };
+    href: string
+  }
   self: {
-    href: string;
-  };
+    href: string
+  }
 }
 
 export interface StoreData {
-  id: string;
-  description: string;
-  reference: string;
-  status: string;
-  merchantId: string;
-  phoneNumber: string;
-  address: Address;
-  _links: Pick<Links, "self">;
+  id: string
+  description: string
+  reference: string
+  status: string
+  merchantId: string
+  phoneNumber: string
+  address: Address
+  _links: Pick<Links, 'self'>
 }
 
 export interface Address {
-  line1: string;
-  line2: string;
-  line3: string;
-  city: string;
-  postalCode: string;
-  stateOrProvince: string;
-  country: string;
+  line1: string
+  line2: string
+  line3: string
+  city: string
+  postalCode: string
+  stateOrProvince: string
+  country: string
 }
 
 export interface TerminalData {
-  id: string;
-  model: string;
-  serialNumber: string;
-  firmwareVersion: string;
-  assignment: Assignment;
-  connectivity: Connectivity;
+  id: string
+  model: string
+  serialNumber: string
+  firmwareVersion: string
+  assignment: Assignment
+  connectivity: Connectivity
 }
 
 interface Assignment {
-  companyId: string;
-  merchantId: string;
-  storeId: string;
-  status: string;
-  reassignmentTarget: ReassignmentTarget;
+  companyId: string
+  merchantId: string
+  storeId: string
+  status: string
+  reassignmentTarget: ReassignmentTarget
 }
 
 interface ReassignmentTarget {
-  inventory: boolean;
+  inventory: boolean
 }
 
 interface Connectivity {
-  cellular: Cellular;
-  wifi: Wifi;
+  cellular: Cellular
+  wifi: Wifi
 }
 
 interface Cellular {
-  iccid: string;
+  iccid: string
 }
 
 interface Wifi {
-  ipAddress: string;
-  macAddress: string;
+  ipAddress: string
+  macAddress: string
 }
 
 export const adyenTerminalBoardWebhook = z.object({
@@ -106,4 +106,4 @@ export const adyenTerminalBoardWebhook = z.object({
     storeId: z.string(),
     uniqueTerminalId: z.string(),
   }),
-});
+})

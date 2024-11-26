@@ -33,3 +33,4 @@ tsconfig.tsbuildinfo
 
 **/*.out
 **/.terraform/
+**/tfgen_*.yml

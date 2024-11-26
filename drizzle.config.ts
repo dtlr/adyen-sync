@@ -3,7 +3,8 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-const requiredEnvVars = ['DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT', 'DB_NAME']
+const requiredEnvVars = ['DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT', 'APP_ENV']
+const dbName = 'dtlr-' + (process.env.APP_ENV?.toLowerCase() ?? 'dev')
 
 if (!process.env.DATABASE_URL) {
   // Check individual vars if no connection string
@@ -22,7 +23,7 @@ export default {
   dbCredentials: {
     url:
       process.env.DATABASE_URL ||
-      `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+      `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${dbName}`,
   },
   introspect: {
     casing: 'camel',

@@ -67,10 +67,7 @@
       "compositePrimaryKeys": {
         "pay_assigned_payment_device_pkey": {
           "name": "pay_assigned_payment_device_pkey",
-          "columns": [
-            "device_id",
-            "business_unit_id"
-          ]
+          "columns": ["device_id", "business_unit_id"]
         }
       },
       "uniqueConstraints": {},
@@ -165,10 +162,7 @@
       "compositePrimaryKeys": {
         "pay_payment_devices_pkey": {
           "name": "pay_payment_devices_pkey",
-          "columns": [
-            "id",
-            "business_unit_id"
-          ]
+          "columns": ["id", "business_unit_id"]
         }
       },
       "uniqueConstraints": {},

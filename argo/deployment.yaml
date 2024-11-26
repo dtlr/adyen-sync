@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adyen-sync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adyen-sync
+  template:
+    metadata:
+      labels:
+        app: adyen-sync
+    spec:
+      containers:
+        - name: adyen-sync
+          image: ghcr.io/dtlr/adyen-sync:edge
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DD_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/adyen-sync.env']
+            - name: DD_SERVICE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/adyen-sync.service']
+            - name: APP_PORT
+              value: "3000"
+            - name: APP_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['env']
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: adyen-sync-secrets
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: adyen-sync-secrets
+                  key: DB_PASSWORD
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: adyen-sync-secrets
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: adyen-sync-secrets
+                  key: DB_PORT
+            - name: ADYEN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: adyen-sync-secrets
+                  key: ADYEN_KEY
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /readyz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
