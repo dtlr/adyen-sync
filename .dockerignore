@@ -1,6 +1,8 @@
 node_modules
 dist
 .env
-jas-argo
+argo
 drizzle
-__tests__
+tests
+terraform
+scripts

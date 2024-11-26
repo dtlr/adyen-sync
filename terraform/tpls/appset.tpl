@@ -43,7 +43,7 @@ spec:
                 patch: |
                   - op: replace
                     path: /spec/template/spec/containers/0/image
-                    value: "ghcr.io/dtlr/${ name }:{{ dig "git_branch" "dev" . }}"
+                    value: "ghcr.io/dtlr/${ name }:{{ dig "git_branch" "qa" . }}"
               - target:
                   kind: ExternalSecret
                   name: app-secret
