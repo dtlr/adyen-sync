@@ -1,0 +1,112 @@
+name: Build and Push Argo Manifests
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The tag to release'
+        required: false
+
+env:
+  JMC_REGISTRY: us-east5-docker.pkg.dev
+  JDNA_REGISTRY: ghcr.io/dtlr
+  IMAGE_NAME: jmc-jdna
+
+jobs:
+  generate-and-apply-manifests:
+    if: github.ref_name == 'main' || github.ref_name == 'dev' || github.ref_name == 'qa'
+
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
+
+      - uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: 'v0.1.4'
+
+      - uses: 1password/load-secrets-action@v2
+        id: load-secrets
+        with:
+          export-env: false
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          CLOUDFLARE_API_TOKEN: op://Engineering/vonsgrysumlyksoqdejqgyij4m/credential
+          GITHUB_APP_ID: op://Engineering/zpfzsvur3faith3dt6g5fh4jo4/githubAppID
+          GITHUB_APP_INSTALLATION_ID: op://Engineering/zpfzsvur3faith3dt6g5fh4jo4/githubAppInstallationID
+          GITHUB_APP_PEM_FILE: op://Engineering/zpfzsvur3faith3dt6g5fh4jo4/privateKey
+          AWS_ACCESS_KEY_ID: op://Engineering/cqjy5aqoucsbmjcdychmwq43wy/username
+          AWS_SECRET_ACCESS_KEY: op://Engineering/cqjy5aqoucsbmjcdychmwq43wy/password
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: my-artifact
+          path: ./
+
+      - name: OpenTofu fmt
+        id: fmt
+        run: cd terraform/ && tofu fmt -check
+        continue-on-error: true
+
+      - name: OpenTofu init
+        id: init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+        run: cd terraform/ && tofu init
+
+      - name: OpenTofu set workspace
+        id: set-workspace
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+        run:
+          cd terraform/ && tofu workspace select ${{ github.ref_name == 'main' && 'prod' ||
+          github.ref_name }}
+
+      - name: OpenTofu Validate
+        id: validate
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          GITHUB_APP_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ steps.load-secrets.outputs.GITHUB_APP_PEM_FILE }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+        run: cd terraform/ && tofu validate -no-color
+
+      - name: OpenTofu plan
+        id: plan
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.load-secrets.outputs.CLOUDFLARE_API_TOKEN }}
+          GITHUB_APP_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ steps.load-secrets.outputs.GITHUB_APP_PEM_FILE }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_jdna_registry: ${{ env.JDNA_REGISTRY }}
+          TF_VAR_jdna_image_name: ${{ env.IMAGE_NAME }}
+          TF_VAR_jdna_tag: ${{ inputs.tag }}
+        run: cd terraform/ && tofu plan -no-color
+
+      - name: Auto apply plan
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.load-secrets.outputs.CLOUDFLARE_API_TOKEN }}
+          GITHUB_APP_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ steps.load-secrets.outputs.GITHUB_APP_PEM_FILE }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_jdna_registry: ${{ env.JDNA_REGISTRY }}
+          TF_VAR_jdna_image_name: ${{ env.IMAGE_NAME }}
+          TF_VAR_jdna_tag: ${{ inputs.tag }}
+        run: cd terraform/ && tofu apply -auto-approve
