@@ -96,5 +96,5 @@ jobs:
               workflow_id: 'release.yml',
               ref: "${{ github.ref_name }}",
 
-              inputs: { tag: ${{ steps.extract_sha_tag.outputs.sha_tag }} }
+              inputs: { tag: "${{ steps.extract_sha_tag.outputs.sha_tag }}" }
             })
