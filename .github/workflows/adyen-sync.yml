@@ -82,7 +82,7 @@ jobs:
       - name: Extract the sha tag
         id: extract_sha_tag
         run: |
-          tag=$(echo ${{ steps.metadata.outputs.tags }} | jq -r '.tags[] | select(test(":sha")) | split(":")[1]')
+          tag=$(echo ${{ steps.metadata.outputs.json }} | jq -r '.tags[] | select(test(":sha")) | split(":")[1]')
           echo "sha_tag=${tag}" >> $GITHUB_OUTPUT
 
       - name: Trigger release
