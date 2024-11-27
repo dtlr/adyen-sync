@@ -66,10 +66,12 @@ locals {
 }
 
 resource "kubernetes_namespace" "adyen_sync" {
-  count = contains(data.kubernetes_all_namespaces.allns.namespaces, local.app_namespace) ? 0 : 1
-
   metadata {
     name = local.app_namespace
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
