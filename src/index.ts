@@ -14,7 +14,7 @@ import { parseStoreRef } from './utils.js'
 import { updateDatabase } from './db.js'
 import { logger } from './utils.js'
 
-export const {
+const {
   DATABASE_URL,
   DB_USER,
   DB_PASSWORD,
@@ -30,7 +30,7 @@ export const {
 
 export const app = new Hono()
 
-if (NODE_ENV !== 'test' && !DATABASE_URL && (!DB_USER || !DB_PASSWORD || !DB_HOST))
+if (NODE_ENV !== 'test' && (!DATABASE_URL && (!DB_USER || !DB_PASSWORD || !DB_HOST)))
   throw new AdyenSyncError({
     name: 'DATABASE_CONFIG_MISSING',
     message: 'Database configuration is missing.',

@@ -13,8 +13,9 @@ spec:
         elements:
           - env: qa
             adyen_env_suffix: "-test"
+            tag: ${ image_tags.qa }
           - env: prod
-            git_branch: "main"
+            tag: ${ image_tags.main }
   template:
     metadata:
       name: "${ name }-{{ .env }}"
@@ -43,7 +44,7 @@ spec:
                 patch: |
                   - op: replace
                     path: /spec/template/spec/containers/0/image
-                    value: "ghcr.io/dtlr/${ name }:{{ dig "git_branch" "qa" . }}"
+                    value: "${ image_registry }/${ image_name }:{{ dig "tag" "qa" . }}"
               - target:
                   kind: ExternalSecret
                   name: app-secret

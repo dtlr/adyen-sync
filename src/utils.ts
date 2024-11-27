@@ -27,12 +27,3 @@ export const parseStoreRef = (reference: string) => {
 export const findDifference = (arr1: string[], arr2: string[]): string[] => {
   return arr1.filter((item) => !arr2.includes(item))
 }
-
-export const customLogger = (message: string, requestId: string, ...rest: string[]) => {
-  const jsonObj = {
-    requestId,
-    message,
-    extra_info: rest ?? [],
-  }
-  console.log('%j', jsonObj)
-}

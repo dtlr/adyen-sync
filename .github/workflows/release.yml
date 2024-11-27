@@ -13,11 +13,10 @@ env:
 
 jobs:
   generate-and-apply-manifests:
-    if: github.ref_name == 'main' || github.ref_name == 'dev' || github.ref_name == 'qa'
-
+    if: github.ref_name == 'main' || github.ref_name == 'qa'
     permissions:
       id-token: write
-      contents: read
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,88 +24,110 @@ jobs:
           fetch-depth: 100
 
       - uses: opentofu/setup-opentofu@v1
+        id: setup_tofu
         with:
           tofu_wrapper: false
 
+      - uses: azure/setup-kubectl@v4
+        id: install_kubectl
+
       - uses: azure/use-kubelogin@v1
+        id: use_kubelogin
         with:
           kubelogin-version: 'v0.1.4'
 
       - uses: 1password/load-secrets-action@v2
-        id: load-secrets
+        id: load_secrets
         with:
           export-env: false
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          CLOUDFLARE_API_TOKEN: op://Engineering/vonsgrysumlyksoqdejqgyij4m/credential
+          DIGITALOCEAN_ACCESS_TOKEN: op://IT Mgmt/am6oas6dfup2hvcwbrwmvl42tm/api_token
           GITHUB_APP_ID: op://Engineering/zpfzsvur3faith3dt6g5fh4jo4/githubAppID
           GITHUB_APP_INSTALLATION_ID: op://Engineering/zpfzsvur3faith3dt6g5fh4jo4/githubAppInstallationID
           GITHUB_APP_PEM_FILE: op://Engineering/zpfzsvur3faith3dt6g5fh4jo4/privateKey
           AWS_ACCESS_KEY_ID: op://Engineering/cqjy5aqoucsbmjcdychmwq43wy/username
           AWS_SECRET_ACCESS_KEY: op://Engineering/cqjy5aqoucsbmjcdychmwq43wy/password
 
-      - uses: actions/upload-artifact@v4
+      - uses: digitalocean/action-doctl@v2
+        id: install_doctl
         with:
-          name: my-artifact
-          path: ./
+          token: ${{ steps.load_secrets.outputs.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Update vars.auto.tfvars
+        id: update_file
+        run: |
+          # Determine which branch is being used
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            BRANCH="main"
+          elif [[ "${{ github.ref_name }}" == "qa" ]]; then
+            BRANCH="qa"
+          else
+            echo "Branch not supported!"
+            exit 1
+          fi
+
+          # Replace the value in the file for the matched line
+          sed -i "s/\($BRANCH *= *\).*/\1\"${{ inputs.tag }}\"/" terraform/vars.auto.tfvars
 
       - name: OpenTofu fmt
-        id: fmt
+        id: tofu_fmt
         run: cd terraform/ && tofu fmt -check
         continue-on-error: true
 
       - name: OpenTofu init
-        id: init
+        id: tofu_init
         env:
-          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
         run: cd terraform/ && tofu init
 
-      - name: OpenTofu set workspace
-        id: set-workspace
-        env:
-          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
-        run:
-          cd terraform/ && tofu workspace select ${{ github.ref_name == 'main' && 'prod' ||
-          github.ref_name }}
-
       - name: OpenTofu Validate
-        id: validate
+        id: tofu_validate
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          GITHUB_APP_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_ID }}
-          GITHUB_APP_INSTALLATION_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
-          GITHUB_APP_PEM_FILE: ${{ steps.load-secrets.outputs.GITHUB_APP_PEM_FILE }}
-          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+          GITHUB_APP_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ steps.load_secrets.outputs.GITHUB_APP_PEM_FILE }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
         run: cd terraform/ && tofu validate -no-color
 
       - name: OpenTofu plan
-        id: plan
+        id: tofu_plan
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          CLOUDFLARE_API_TOKEN: ${{ steps.load-secrets.outputs.CLOUDFLARE_API_TOKEN }}
-          GITHUB_APP_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_ID }}
-          GITHUB_APP_INSTALLATION_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
-          GITHUB_APP_PEM_FILE: ${{ steps.load-secrets.outputs.GITHUB_APP_PEM_FILE }}
-          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
-          TF_VAR_jdna_registry: ${{ env.JDNA_REGISTRY }}
-          TF_VAR_jdna_image_name: ${{ env.IMAGE_NAME }}
-          TF_VAR_jdna_tag: ${{ inputs.tag }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.load_secrets.outputs.CLOUDFLARE_API_TOKEN }}
+          GITHUB_APP_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ steps.load_secrets.outputs.GITHUB_APP_PEM_FILE }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
         run: cd terraform/ && tofu plan -no-color
 
       - name: Auto apply plan
+        id: tofu_apply
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          CLOUDFLARE_API_TOKEN: ${{ steps.load-secrets.outputs.CLOUDFLARE_API_TOKEN }}
-          GITHUB_APP_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_ID }}
-          GITHUB_APP_INSTALLATION_ID: ${{ steps.load-secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
-          GITHUB_APP_PEM_FILE: ${{ steps.load-secrets.outputs.GITHUB_APP_PEM_FILE }}
-          AWS_ACCESS_KEY_ID: ${{ steps.load-secrets.outputs.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.load-secrets.outputs.AWS_SECRET_ACCESS_KEY }}
-          TF_VAR_jdna_registry: ${{ env.JDNA_REGISTRY }}
-          TF_VAR_jdna_image_name: ${{ env.IMAGE_NAME }}
-          TF_VAR_jdna_tag: ${{ inputs.tag }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.load_secrets.outputs.CLOUDFLARE_API_TOKEN }}
+          GITHUB_APP_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ steps.load_secrets.outputs.GITHUB_APP_PEM_FILE }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
         run: cd terraform/ && tofu apply -auto-approve
+
+      - name: Save DigitalOcean kubeconfig
+        id: do_kubeconfig
+        run: doctl kubernetes cluster kubeconfig save do-infra-cluster
+
+      - name: Apply Argo Manifests
+        run: cd terraform/ && kubectl apply -f tfgen_appset.yml
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add terraform/vars.auto.tfvars
+          git commit -m "Update vars.auto.tfvars based on branch ${{ github.ref_name }}"
+          git push

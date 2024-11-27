@@ -36,3 +36,21 @@ terraform {
     }
   }
 }
+
+variable "image_registry" {
+  type    = string
+  default = "ghcr.io/dtlr"
+}
+
+variable "image_name" {
+  type    = string
+  default = "adyen-sync"
+}
+
+variable "image_tags" {
+  type = map(string)
+  default = {
+    main = "latest"
+    qa   = "qa"
+  }
+}

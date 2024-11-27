@@ -33,7 +33,8 @@ data "terraform_remote_state" "azure_0" {
 }
 
 provider "kubernetes" {
-  host                   = data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.host
+  host = data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.host
+  #   token                  = data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.token
   cluster_ca_certificate = base64decode(data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.cluster_ca_certificate)
 
   exec {
@@ -49,7 +50,6 @@ provider "kubernetes" {
       trimprefix(split(".", data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.host)[0], "https://")
     ]
   }
-
 }
 
 data "onepassword_item" "gh_app" {
@@ -137,9 +137,12 @@ resource "kubernetes_secret" "adyen_sync_repo" {
 resource "local_file" "appset" {
   filename = "${path.module}/tfgen_appset.yml"
   content = templatefile("${path.module}/tpls/appset.tpl", {
-    name         = "adyen-sync"
-    namespace    = local.app_namespace
-    project_name = "adyen-sync"
-    cluster_name = nonsensitive(data.terraform_remote_state.azure_0.outputs.aks_details.name)
+    name           = "adyen-sync"
+    namespace      = local.app_namespace
+    project_name   = "adyen-sync"
+    cluster_name   = nonsensitive(data.terraform_remote_state.azure_0.outputs.aks_details.name)
+    image_tags     = var.image_tags
+    image_name     = var.image_name
+    image_registry = var.image_registry
   })
 }
