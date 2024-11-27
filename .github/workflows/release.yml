@@ -68,11 +68,11 @@ jobs:
           fi
 
           # Replace the value in the file for the matched line
-          sed -i "s/\($BRANCH *= *\).*/\1\"${{ inputs.tag }}\"/" terraform/vars.auto.tfvars
+          sed -i "s/\($BRANCH *= *\).*/\1\"${{ inputs.tag }}\"/" 1-terraform/vars.auto.tfvars
 
       - name: OpenTofu fmt
         id: tofu_fmt
-        run: cd terraform/ && tofu fmt -check
+        run: cd 0-terraform/ && tofu fmt -check
         continue-on-error: true
 
       - name: OpenTofu init
@@ -80,7 +80,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
-        run: cd terraform/ && tofu init
+        run: cd 0-terraform/ && tofu init
 
       - name: OpenTofu Validate
         id: tofu_validate
@@ -91,7 +91,7 @@ jobs:
           GITHUB_APP_PEM_FILE: ${{ steps.load_secrets.outputs.GITHUB_APP_PEM_FILE }}
           AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
-        run: cd terraform/ && tofu validate -no-color
+        run: cd 0-terraform/ && tofu validate -no-color
 
       - name: OpenTofu plan
         id: tofu_plan
@@ -103,7 +103,7 @@ jobs:
           GITHUB_APP_PEM_FILE: ${{ steps.load_secrets.outputs.GITHUB_APP_PEM_FILE }}
           AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
-        run: cd terraform/ && tofu plan -no-color
+        run: cd 0-terraform/ && tofu plan -no-color
 
       - name: Auto apply plan
         id: tofu_apply
@@ -115,19 +115,66 @@ jobs:
           GITHUB_APP_PEM_FILE: ${{ steps.load_secrets.outputs.GITHUB_APP_PEM_FILE }}
           AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
-        run: cd terraform/ && tofu apply -auto-approve
+        run: cd 0-terraform/ && tofu apply -auto-approve
 
-      - name: Save DigitalOcean kubeconfig
-        id: do_kubeconfig
-        run: doctl kubernetes cluster kubeconfig save do-infra-cluster
+      - name: OpenTofu fmt
+        id: tofu_fmt_1
+        run: cd 1-terraform/ && tofu fmt -check
+        continue-on-error: true
 
-      - name: Apply Argo Manifests
-        run: cd terraform/ && kubectl apply -f tfgen_appset.yml
+      - name: OpenTofu init
+        id: tofu_init_1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+        run: cd 1-terraform/ && tofu init
+
+      - name: OpenTofu set workspace
+        id: set-workspace
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+        run: cd 1-terraform/ && tofu workspace select -or-create ${{ github.ref_name }}
+
+      - name: OpenTofu Validate
+        id: tofu_validate_1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          GITHUB_APP_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ steps.load_secrets.outputs.GITHUB_APP_PEM_FILE }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+        run: cd 1-terraform/ && tofu validate -no-color
+
+      - name: OpenTofu plan
+        id: tofu_plan_1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.load_secrets.outputs.CLOUDFLARE_API_TOKEN }}
+          GITHUB_APP_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ steps.load_secrets.outputs.GITHUB_APP_PEM_FILE }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+        run: cd 1-terraform/ && tofu plan -no-color
+
+      - name: Auto apply plan
+        id: tofu_apply_1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.load_secrets.outputs.CLOUDFLARE_API_TOKEN }}
+          GITHUB_APP_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_ID }}
+          GITHUB_APP_INSTALLATION_ID: ${{ steps.load_secrets.outputs.GITHUB_APP_INSTALLATION_ID }}
+          GITHUB_APP_PEM_FILE: ${{ steps.load_secrets.outputs.GITHUB_APP_PEM_FILE }}
+          AWS_ACCESS_KEY_ID: ${{ steps.load_secrets.outputs.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.load_secrets.outputs.AWS_SECRET_ACCESS_KEY }}
+        run: cd 1-terraform/ && tofu apply -auto-approve
 
       - name: Commit and Push Changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add terraform/vars.auto.tfvars
+          git add 1-terraform/vars.auto.tfvars
           git commit -m "Update vars.auto.tfvars based on branch ${{ github.ref_name }}"
           git push

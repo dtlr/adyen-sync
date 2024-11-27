@@ -7,3 +7,8 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
+
+labels:
+  - pairs:
+      tags.datadoghq.com/adyen-sync.service: adyen-sync
+    includeTemplates: true

@@ -66,9 +66,12 @@ locals {
 }
 
 resource "kubernetes_namespace" "adyen_sync" {
-
   metadata {
     name = local.app_namespace
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -134,15 +137,14 @@ resource "kubernetes_secret" "adyen_sync_repo" {
   }
 }
 
-resource "local_file" "appset" {
-  filename = "${path.module}/tfgen_appset.yml"
-  content = templatefile("${path.module}/tpls/appset.tpl", {
-    name           = "adyen-sync"
-    namespace      = local.app_namespace
-    project_name   = "adyen-sync"
-    cluster_name   = nonsensitive(data.terraform_remote_state.azure_0.outputs.aks_details.name)
-    image_tags     = var.image_tags
-    image_name     = var.image_name
-    image_registry = var.image_registry
-  })
+output "namespace" {
+  value = local.app_namespace
+}
+
+output "argo_details" {
+  value = {
+    project_name = kubernetes_manifest.adyen_sync_prj.manifest.metadata.name
+    destination = nonsensitive(data.terraform_remote_state.azure_0.outputs.aks_details.name)
+    namespace    = local.app_namespace
+  }
 }
