@@ -40,7 +40,7 @@ export const updateDatabase = async ({
         .select({ deviceId: devDevicePersonalization.deviceId })
         .from(devDevicePersonalization)
         .where(eq(devDevicePersonalization.businessUnitId, item[2]))
-      logger.info({ message: `Found workstations for ${item}`, dbExistingWorkstations })
+      logger.info({ message: `Found workstations for ${item}`, requestId, dbExistingWorkstations })
 
       if (dbExistingWorkstations.length > 0)
         existingWorkstationIds = dbExistingWorkstations.map(

@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: adyen-sync
+        tags.datadoghq.com/adyen-sync.env: qa
     spec:
       containers:
         - name: adyen-sync
