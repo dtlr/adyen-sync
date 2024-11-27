@@ -5,12 +5,7 @@ import type { AdyenStoresResponse } from './types.js'
 import { AdyenSyncError } from './error.js'
 import { logger } from './utils.js'
 
-const {
-  ADYEN_KEY,
-  ADYEN_KEY_LIVE,
-  ADYEN_KEY_TEST,
-  APP_ENV,
-} = process.env
+const { ADYEN_KEY, ADYEN_KEY_LIVE, ADYEN_KEY_TEST, APP_ENV } = process.env
 
 export const fetchAdyenData = async ({
   requestId,
@@ -51,7 +46,7 @@ export const fetchAdyenData = async ({
       page++
     } while (pagesTotal > page)
 
-    logger.info({
+    logger.debug({
       message: `Successfully fetched ${data.length} records`,
       requestId,
       data,

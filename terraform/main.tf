@@ -33,7 +33,8 @@ data "terraform_remote_state" "azure_0" {
 }
 
 provider "kubernetes" {
-  host                   = data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.host
+  host = data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.host
+  #   token                  = data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.token
   cluster_ca_certificate = base64decode(data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.cluster_ca_certificate)
 
   exec {
@@ -49,7 +50,6 @@ provider "kubernetes" {
       trimprefix(split(".", data.terraform_remote_state.do.outputs.do_kubernetes_cluster_kube_config.host)[0], "https://")
     ]
   }
-
 }
 
 data "onepassword_item" "gh_app" {
