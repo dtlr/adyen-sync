@@ -1,4 +1,4 @@
 image_tags = {
   main = "latest"
-  qa   = "qa"
+  qa   = "sha-eaeee63"
 }
