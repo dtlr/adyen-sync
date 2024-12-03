@@ -1,10 +1,11 @@
 {
   "name": "adyen-sync",
+  "description": "Sync Adyen data to the database and other services",
   "type": "module",
   "version": "0.0.1",
   "author": "Nigel Williams-Lucas <nwilliams-lucas@dtlr.com>",
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json && pkg ./dist/src/cli.js node16-linux-x64 --out-path dist/adyen-sync",
     "dev": "tsx watch src/index.ts",
     "clean": "rm -rf node_modules .cache dist",
     "cf:dev": "npm run dev && npx cloudflared tunnel --url http://localhost:3000",
@@ -18,7 +19,6 @@
     "@hono/node-server": "^1.13.7",
     "@neondatabase/api-client": "^1.10.3",
     "axios": "^1.7.7",
-    "commander": "^12.1.0",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.36.1",
     "hono": "^4.6.9",
@@ -29,7 +29,7 @@
   "devDependencies": {
     "@eslint/plugin-kit": ">= 0.2.3",
     "@nwlnexus/config": "^1.2.0",
-    "@types/node": "^20.17.6",
+    "@types/node": "^20.17.9",
     "@types/pg": "^8.11.10",
     "@vitest/coverage-v8": "^2.1.4",
     "drizzle-kit": "^0.28.0",

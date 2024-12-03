@@ -1,11 +1,12 @@
 {
-  "extends": ["@nwlnexus/config/typescript"],
   "compilerOptions": {
+    "composite": true,
     "target": "esnext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "types": ["node", "zod"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
@@ -14,6 +15,6 @@
     "noEmit": false,
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "package.json"],
   "exclude": ["node_modules", "dist", "tests"]
 }
