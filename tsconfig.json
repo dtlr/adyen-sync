@@ -12,9 +12,10 @@
     "jsxImportSource": "hono/jsx",
     "verbatimModuleSyntax": false,
     "outDir": "./dist",
+    "rootDir": "./src",
     "noEmit": false,
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
-  "include": ["src/**/*.ts", "package.json"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "tests"]
 }
