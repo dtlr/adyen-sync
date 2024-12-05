@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "composite": true,
+    "composite": false,
     "target": "esnext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -14,7 +14,6 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmit": false,
-    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "tests"]

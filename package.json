@@ -54,7 +54,7 @@
   },
   "oclif": {
     "bin": "adyen-sync",
-    "commands": "./dist/commands",
+    "commands": "./src/commands",
     "dirname": "adyen-sync",
     "topicSeparator": " "
   }
