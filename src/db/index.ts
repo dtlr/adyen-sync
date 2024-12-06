@@ -1,13 +1,9 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { eq } from 'drizzle-orm'
-import {
-  devDevicePersonalization,
-  payAssignedPaymentDevice,
-  payPaymentDevices,
-} from './db/schema.js'
-import { findDifference, posWrkIds } from './utils.js'
-import { AdyenSyncError } from './error.js'
-import { logger } from './utils.js'
+import { devDevicePersonalization, payAssignedPaymentDevice, payPaymentDevices } from './schema.js'
+import { POSWRKIDS } from '../core/constants.js'
+import { AdyenSyncError } from '../core/error.js'
+import { logger, findDifference } from '../core/utils.js'
 
 const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, APP_ENV } = process.env
 
@@ -74,7 +70,7 @@ export const updateDatabase = async ({
         })
 
         const availableWorkstationIds = findDifference(
-          posWrkIds.map((i) => i.padStart(3, '0')),
+          POSWRKIDS.map((i) => i.padStart(3, '0')),
           existingWorkstationIds,
         )
         logger.info({

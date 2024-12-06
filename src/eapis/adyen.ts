@@ -1,9 +1,9 @@
 import axios from 'axios'
-import type { AdyenTerminalsResponse, StoreData, TerminalData } from './types.js'
+import type { AdyenTerminalsResponse, StoreData, TerminalData } from '../types.js'
 
-import type { AdyenStoresResponse } from './types.js'
-import { AdyenSyncError } from './error.js'
-import { logger } from './utils.js'
+import type { AdyenStoresResponse } from '../types.js'
+import { AdyenSyncError } from '../core/error.js'
+import { logger } from '../core/utils.js'
 
 const { ADYEN_KEY, ADYEN_KEY_LIVE, ADYEN_KEY_TEST, APP_ENV } = process.env
 
@@ -27,13 +27,14 @@ export const fetchAdyenData = async ({
   try {
     let pagesTotal: number
     let data: (StoreData | TerminalData)[] = []
+    let pageSize = opts.pageSize || 100
     let page = opts.page || 1
 
     do {
       const query =
         opts.type?.toLowerCase() === 'stores'
-          ? `https://${adyenEndpoint}.adyen.com/v3/stores?pageNumber=${page}&pageSize=${opts.pageSize}`
-          : `https://${adyenEndpoint}.adyen.com/v3/terminals?pageNumber=${page}&pageSize=${opts.pageSize}`
+          ? `https://${adyenEndpoint}.adyen.com/v3/stores?pageNumber=${page}&pageSize=${pageSize}`
+          : `https://${adyenEndpoint}.adyen.com/v3/terminals?pageNumber=${page}&pageSize=${pageSize}`
       const response = await axios.get<AdyenStoresResponse | AdyenTerminalsResponse>(query, {
         headers: {
           'Content-Type': 'application/json',
