@@ -6,7 +6,7 @@
   "author": "Nigel Williams-Lucas <nwilliams-lucas@dtlr.com>",
   "scripts": {
     "build": "rimraf dist node_modules/.cache && tsc --project tsconfig.json",
-    "dev": "tsx watch src/index.ts",
+    "dev": "./bin/dev.js",
     "clean": "rimraf node_modules .cache dist",
     "cf:dev": "npm run dev && npx cloudflared tunnel --url http://localhost:3000",
     "neon:create": "node scripts/create.js",
