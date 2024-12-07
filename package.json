@@ -23,6 +23,7 @@
     "@oclif/plugin-not-found": "^3.2.29",
     "@paralleldrive/cuid2": "^2.2.2",
     "axios": "^1.7.7",
+    "commander": "^12.1.0",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.36.1",
     "hono": "^4.6.9",

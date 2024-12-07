@@ -3,10 +3,16 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-const requiredEnvVars = ['DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT', 'APP_ENV']
+const requiredEnvVars = [
+  'NEON_DB_USER',
+  'NEON_DB_PASSWORD',
+  'NEON_DB_HOST',
+  'NEON_DB_PORT',
+  'APP_ENV',
+]
 const dbName = 'dtlr-' + (process.env.APP_ENV?.toLowerCase() ?? 'dev')
 
-if (!process.env.DATABASE_URL) {
+if (!process.env.NEON_DATABASE_URL) {
   // Check individual vars if no connection string
   const missingVars = requiredEnvVars.filter((varName) => !process.env[varName])
 
@@ -17,13 +23,13 @@ if (!process.env.DATABASE_URL) {
 }
 
 export default {
-  schema: './src/db/schema.ts',
+  schema: './src/db/neon.ts',
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
     url:
-      process.env.DATABASE_URL ||
-      `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${dbName}`,
+      process.env.NEON_DATABASE_URL ||
+      `postgres://${process.env.NEON_DB_USER}:${process.env.NEON_DB_PASSWORD}@${process.env.NEON_DB_HOST}:${process.env.NEON_DB_PORT}/${dbName}`,
   },
   introspect: {
     casing: 'camel',

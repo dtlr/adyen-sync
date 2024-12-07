@@ -16,19 +16,24 @@ const options = program.opts()
 
 if (options.name) {
   console.log(`Creating fascia ${options.name}`)
-  console.log(typeof options.name)
 
-  const response = await neonApi.createProject({
-    project: {
-      name: options.name,
-      pg_version: '16',
-      region_id: 'aws-us-east-1',
-      org_id: process.env.NEON_ORG_ID,
-    },
-  })
+  try {
+    const response = await neonApi.createProjectBranchDatabase(
+      process.env.NEON_PROJECT_ID,
+      process.env.NEON_BRANCH_ID,
+      {
+        database: {
+          name: options.name,
+          owner_name: 'neondb_owner',
+        },
+      },
+    )
 
-  const { data } = response
-  console.log(data)
+    const { data } = response
+    console.log(data)
+  } catch (error) {
+    console.error('Error creating project', error)
+  }
 } else {
   console.error('Fascia name is required')
   process.exit(1)
