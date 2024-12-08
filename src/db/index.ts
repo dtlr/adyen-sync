@@ -1,9 +1,9 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { eq } from 'drizzle-orm'
 import { devDevicePersonalization, payAssignedPaymentDevice, payPaymentDevices } from './schema.js'
-import { POSWRKIDS } from '../core/constants.js'
-import { AdyenSyncError } from '../core/error.js'
-import { logger, findDifference } from '../core/utils.js'
+import { POSWRKIDS } from '@core/constants.js'
+import { AdyenSyncError } from '@core/error.js'
+import { logger, findDifference } from '@core/utils.js'
 
 const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, APP_ENV } = process.env
 

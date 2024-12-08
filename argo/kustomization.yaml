@@ -12,5 +12,5 @@ resources:
 
 labels:
   - pairs:
-      tags.datadoghq.com/adyen-sync.service: adyen-sync
+      tags.datadoghq.com/jdna-sync.service: jdna-sync
     includeTemplates: true

@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: adyen-sync
+  name: jdna-sync
 spec:
   selector:
-    app: adyen-sync
+    app: jdna-sync
   ports:
     - port: 80
       targetPort: 3000
-  type: ClusterIP 
+  type: ClusterIP

@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket = "tf-remote-state"
-    key    = "tf-adyen-sync-1.tfstate"
+    key    = "tf-jdna-sync-1.tfstate"
     region = "auto"
     endpoints = {
       s3 = "https://316c0ba9429f31c14edaf70a48220769.r2.cloudflarestorage.com"

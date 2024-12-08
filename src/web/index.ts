@@ -6,10 +6,10 @@ import { secureHeaders } from 'hono/secure-headers'
 import { RETAINED_304_HEADERS } from 'hono/etag'
 import { etag } from 'hono/etag'
 import { HTTPException } from 'hono/http-exception'
-import { AdyenSyncError } from '../core/error.js'
-import { adyenTerminalBoardWebhook } from '../types.js'
-import { logger } from '../core/utils.js'
-import { processTerminals } from '../core/process/terminals.js'
+import { AdyenSyncError } from '@/error.js'
+import { adyenTerminalBoardWebhook } from 'types/adyen.js'
+import { webLogger } from '@/core/utils.js'
+import { processTerminals } from '@core/process/terminals.js'
 
 export const app = new Hono()
 
@@ -25,7 +25,7 @@ app.use('*', cors())
 app.use('*', secureHeaders())
 
 app.get('/readyz', (c) => {
-  logger.info({
+  webLogger.info({
     message: 'Readyz',
     requestId: c.get('requestId'),
   })
@@ -47,7 +47,7 @@ app.post('/callback/adyen', async (c) => {
       },
     })
   }
-  logger.info({
+  webLogger.info({
     message: 'Received request',
     requestId: c.get('requestId'),
     body: parsedBody.data,
@@ -69,13 +69,13 @@ app.get('/fleet', async (c) => {
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
-    logger.error(err)
+    webLogger.error(err)
     return c.json({ message: err.message, requestId: c.get('requestId') }, err.status)
   } else if (err instanceof AdyenSyncError) {
-    logger.error(err)
+    webLogger.error(err)
     return c.json({ message: err.message, requestId: c.get('requestId') }, 400)
   } else {
-    logger.error(err)
+    webLogger.error(err)
     return c.json(
       {
         name: 'UNHANDLED_ERROR',

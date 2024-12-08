@@ -65,7 +65,7 @@ locals {
   app_namespace = "adyen-sync"
 }
 
-resource "kubernetes_namespace" "adyen_sync" {
+resource "kubernetes_namespace" "jdna_sync" {
   metadata {
     name = local.app_namespace
   }
@@ -75,22 +75,22 @@ resource "kubernetes_namespace" "adyen_sync" {
   }
 }
 
-resource "kubernetes_manifest" "adyen_sync_prj" {
+resource "kubernetes_manifest" "jdna_sync_prj" {
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "AppProject"
     metadata = {
-      name      = "adyen-sync"
+      name      = "jdna-sync"
       namespace = "argocd"
     }
     spec = {
-      description = "Adyen Sync"
+      description = "JDNA Sync"
       sourceNamespaces = [
         local.app_namespace,
       ]
       sourceRepos = [
         "https://github.com/dtlr/argo-manifest-monorepo.git",
-        "https://github.com/dtlr/adyen-sync.git"
+        "https://github.com/dtlr/jdna-sync.git"
       ]
       clusterResourceWhitelist = [
         {
@@ -118,9 +118,9 @@ resource "kubernetes_manifest" "adyen_sync_prj" {
   }
 }
 
-resource "kubernetes_secret" "adyen_sync_repo" {
+resource "kubernetes_secret" "jdna_sync_repo" {
   metadata {
-    name      = "adyen-sync-repo"
+    name      = "jdna-sync-repo"
     namespace = local.app_namespace
     labels = {
       "argocd.argoproj.io/secret-type" = "repository"
@@ -128,7 +128,7 @@ resource "kubernetes_secret" "adyen_sync_repo" {
   }
   data = {
     type                    = "git"
-    url                     = "https://github.com/dtlr/adyen-sync.git"
+    url                     = "https://github.com/dtlr/jdna-sync.git"
     githubAppID             = data.onepassword_item.gh_app.section.0.field.1.value
     githubAppInstallationID = data.onepassword_item.gh_app.section.0.field.2.value
     githubAppPrivateKey     = <<-PRVKEY
@@ -143,8 +143,8 @@ output "namespace" {
 
 output "argo_details" {
   value = {
-    project_name = kubernetes_manifest.adyen_sync_prj.manifest.metadata.name
-    destination = nonsensitive(data.terraform_remote_state.azure_0.outputs.aks_details.name)
+    project_name = kubernetes_manifest.jdna_sync_prj.manifest.metadata.name
+    destination  = nonsensitive(data.terraform_remote_state.azure_0.outputs.aks_details.name)
     namespace    = local.app_namespace
   }
 }

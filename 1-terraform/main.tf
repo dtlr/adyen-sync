@@ -15,11 +15,11 @@ data "terraform_remote_state" "do" {
   }
 }
 
-data "terraform_remote_state" "adyen_sync_0" {
+data "terraform_remote_state" "jdna_sync_0" {
   backend = "s3"
   config = {
     bucket = "tf-remote-state"
-    key    = "tf-adyen-sync.tfstate"
+    key    = "tf-jdna-sync.tfstate"
     region = "auto"
     endpoints = {
       s3 = "https://316c0ba9429f31c14edaf70a48220769.r2.cloudflarestorage.com"
@@ -60,18 +60,18 @@ locals {
 resource "kubernetes_manifest" "argo_application" {
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
-    kind = "Application"
+    kind       = "Application"
     metadata = {
       labels = {
         app = "${local.app_name}-${terraform.workspace == "main" ? "prod" : terraform.workspace}"
         env = terraform.workspace == "main" ? "prod" : terraform.workspace
       }
-      name = "${local.app_name}-${terraform.workspace == "main" ? "prod" : terraform.workspace}"
+      name      = "${local.app_name}-${terraform.workspace == "main" ? "prod" : terraform.workspace}"
       namespace = data.terraform_remote_state.adyen_sync_0.outputs.namespace
     }
     spec = {
       destination = {
-        name = data.terraform_remote_state.adyen_sync_0.outputs.argo_details.destination
+        name      = data.terraform_remote_state.adyen_sync_0.outputs.argo_details.destination
         namespace = "${data.terraform_remote_state.adyen_sync_0.outputs.argo_details.namespace}-${terraform.workspace == "main" ? "prod" : terraform.workspace}"
       }
       project = data.terraform_remote_state.adyen_sync_0.outputs.argo_details.project_name
@@ -79,8 +79,8 @@ resource "kubernetes_manifest" "argo_application" {
         {
           kustomize = {
             commonLabels = {
-              env = terraform.workspace == "main" ? "prod" : terraform.workspace
-              "tags.datadoghq.com/${local.app_name}.env" = terraform.workspace == "main" ? "prod" : terraform.workspace
+              env                                            = terraform.workspace == "main" ? "prod" : terraform.workspace
+              "tags.datadoghq.com/${local.app_name}.env"     = terraform.workspace == "main" ? "prod" : terraform.workspace
               "tags.datadoghq.com/${local.app_name}.service" = local.app_name
             }
             namespace = data.terraform_remote_state.adyen_sync_0.outputs.argo_details.namespace
@@ -118,7 +118,7 @@ resource "kubernetes_manifest" "argo_application" {
                 patch = <<-EOT
                 - op: add
                   path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
-                  value: "adyen-sync${terraform.workspace == "qa" ? "-test" : ""}.jdna.io"
+                  value: "jdna-sync${terraform.workspace == "qa" ? "-test" : ""}.jdna.io"
                 
                 EOT
                 target = {
@@ -130,7 +130,7 @@ resource "kubernetes_manifest" "argo_application" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/rules/0/host
-                  value: "adyen-sync${terraform.workspace == "qa" ? "-test" : ""}.jdna.io"
+                  value: "jdna-sync${terraform.workspace == "qa" ? "-test" : ""}.jdna.io"
                 
                 EOT
                 target = {
@@ -142,7 +142,7 @@ resource "kubernetes_manifest" "argo_application" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/tls/0/hosts/0
-                  value: "adyen-sync${terraform.workspace == "qa" ? "-test" : ""}.jdna.io"
+                  value: "jdna-sync${terraform.workspace == "qa" ? "-test" : ""}.jdna.io"
                 
                 EOT
                 target = {
@@ -154,7 +154,7 @@ resource "kubernetes_manifest" "argo_application" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/tls/0/secretName
-                  value: "adyen-sync-tls"
+                  value: "jdna-sync-tls"
                 
                 EOT
                 target = {
@@ -164,14 +164,14 @@ resource "kubernetes_manifest" "argo_application" {
               },
             ]
           }
-          path = "argo"
-          repoURL = "https://github.com/dtlr/adyen-sync.git"
+          path           = "argo"
+          repoURL        = "https://github.com/dtlr/jdna-sync.git"
           targetRevision = "HEAD"
         },
       ]
       syncPolicy = {
         automated = {
-          prune = true
+          prune    = true
           selfHeal = true
         }
         syncOptions = [

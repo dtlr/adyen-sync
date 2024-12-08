@@ -2,7 +2,7 @@ export class ErrorBase<T extends string> extends Error {
   requestId?: string
   name: T
   message: string
-  cause: unknown
+  cause?: unknown
 
   constructor({
     requestId,
@@ -30,4 +30,5 @@ type ErrorName =
   | 'DATABASE_CONFIG_MISSING'
   | 'ADYEN_API'
   | 'ROUTE_FLEET'
+  | 'ENV_ERROR'
 export class AdyenSyncError extends ErrorBase<ErrorName> {}

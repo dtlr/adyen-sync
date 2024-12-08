@@ -1,39 +1,38 @@
-import { updateDatabase } from '../../db'
-import { fetchAdyenData } from '../../eapis/adyen'
-import { TerminalData } from '../../types'
-import { StoreData } from '../../types'
-import { logger, parseStoreRef } from '../utils'
+import { updateDatabase } from '@db/index.js'
+import { fetchAdyenData } from '@eapis/adyen.js'
+import { TerminalData, StoreData } from 'types/adyen.js'
+import { logger, parseStoreRef } from '../utils.js'
 
 export const processTerminals = async ({
   requestId,
 }: {
   requestId: string
 }): Promise<[string, string, string][]> => {
-  logger.info({ requestId, message: 'Processing terminals' })
+  logger('adyen-sync-terminals').info({ requestId, message: 'Processing terminals' })
   const stores = (await fetchAdyenData({
     requestId,
     opts: {
       type: 'stores',
     },
   })) as StoreData[]
-  logger.debug({ requestId, message: 'Fetched stores', stores })
+  logger('adyen-sync-terminals').debug({ requestId, message: 'Fetched stores', stores })
   const terminals = (await fetchAdyenData({
     requestId,
     opts: {
       type: 'terminals',
     },
   })) as TerminalData[]
-  logger.debug({ requestId, message: 'Fetched terminals', terminals })
+  logger('adyen-sync-terminals').debug({ requestId, message: 'Fetched terminals', terminals })
   const mposDevices = terminals.filter(
     (terminal) =>
       terminal.model === 'S1E2L' && terminal.assignment.status.toLowerCase() != 'inventory',
   )
-  logger.debug({ requestId, message: 'Filtered terminals', mposDevices })
+  logger('adyen-sync-terminals').debug({ requestId, message: 'Filtered terminals', mposDevices })
   const jmData: [string, string, string][] = []
   for (const mposDevice of mposDevices) {
     const store = stores.find((store) => store.id === mposDevice.assignment.storeId)
     if (!store?.reference) {
-      logger.error({
+      logger('adyen-sync-terminals').error({
         requestId,
         name: 'ROUTE_FLEET',
         area: 'Store reference processing',
@@ -46,7 +45,7 @@ export const processTerminals = async ({
     }
     const storeRef = parseStoreRef(store.reference)
     if (!storeRef?.prefix || !storeRef?.number) {
-      logger.error({
+      logger('adyen-sync-terminals').error({
         requestId,
         name: 'ROUTE_FLEET',
         area: 'Store reference processing',

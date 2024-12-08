@@ -1,15 +1,17 @@
+import { localLocationSchema } from 'types'
 import { z } from 'zod'
 
-export type Bindings = {
-  APP_ENV: 'PROD' | 'prod' | 'QA' | 'qa' | 'DEV' | 'dev' | undefined
-  DATABASE_URL?: string
-  DB_HOST: string
-  DB_PORT: string
-  DB_USER: string
-  DB_PASSWORD: string
-  ADYEN_KEY_TEST: string
-  ADYEN_KEY_LIVE: string
-}
+export type AdyenRecord = { id: string; merchantId: string }
+
+export const adyenLocationSchema = z.object({
+  id: z.string(),
+  value: localLocationSchema.omit({
+    location_short_name: true,
+    location_code: true,
+    active_flag: true,
+  }),
+})
+export type AdyenLocation = z.infer<typeof adyenLocationSchema>
 
 export type AdyenTerminalsResponse = {
   _links: Links
@@ -107,3 +109,74 @@ export const adyenTerminalBoardWebhook = z.object({
     uniqueTerminalId: z.string(),
   }),
 })
+
+export type AdyenStoreCreate = {
+  id: string
+  address: {
+    country: string
+    line1: string
+    line2: string
+    line3: string
+    city: string
+    stateOrProvince: string
+    postalCode: string
+  }
+  description: string
+  merchantId: string
+  shopperStatement: string
+  phoneNumber: string
+  reference: string
+  status: string
+  _links: {
+    self: {
+      href: string
+    }
+  }
+}
+
+export type AdyenStoresReturn = {
+  _links: {
+    first?: {
+      href: string
+    }
+    last?: {
+      href: string
+    }
+    next?: {
+      href: string
+    }
+    self: {
+      href: string
+    }
+  }
+  itemsTotal: number
+  pagesTotal: number
+  data: {
+    address: {
+      city: string
+      line1: string
+      postalCode: string
+      stateOrProvince: string
+      country: string
+    }
+    description: string
+    externalReferenceId: string
+    merchantId: string
+    phoneNumber: string
+    reference: string
+    shopperStatement: string
+    status: string
+    id: string
+    _links: {
+      first?: {
+        href: string
+      }
+      last?: {
+        href: string
+      }
+      self: {
+        href: string
+      }
+    }
+  }[]
+}

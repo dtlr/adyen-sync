@@ -4,13 +4,14 @@ import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { parseConnectionUri } from './utils.js'
+import { JDNAProperty } from '../src/constants.js'
 import 'dotenv/config'
 
 if (!process.env.NEON_API_KEY) {
   throw new Error('NEON_API_KEY is not set')
 }
 
-const BANNERS = ['dtlr', 'spc']
+const BANNERS = JDNAProperty
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -32,7 +33,7 @@ const neonApi = createApiClient({
   apiKey: process.env.NEON_API_KEY,
 })
 
-const scriptName = 'adyen_sync'
+const scriptName = pkg.name.replace(/-/g, '_')
 const roleName = scriptName
 let hasRunningOperations = false
 
@@ -160,7 +161,7 @@ for (const banner of BANNERS) {
 
   //Check if the database already exists
   if (database) {
-    console.error(`Database ${banner} already exists`)
+    console.info(`Database ${banner} already exists`)
   } else {
     console.info(`Creating database for fascia ${banner}`)
     const database = await neonApi.createProjectBranchDatabase(projectId, branchId, {
@@ -196,6 +197,14 @@ for (const banner of BANNERS) {
     try {
       const item = await op.getItemByTitle(vault.id, projectName.replace(/_/g, '-'))
       console.info(`Secrets for project ${projectName} already exist`)
+      item.database = banner
+      item.server = conn.host
+      item.port = conn.port.toString()
+      item.username = conn.username
+      item.password = conn.password
+      item.connection_string = uri
+      item.connection_options = JSON.stringify(conn.params)
+      await op.updateItem(vault.id, item)
     } catch {
       console.info(`Creating secrets for project ${projectName}`)
       const item = new ItemBuilder()
@@ -223,12 +232,17 @@ for (const banner of BANNERS) {
         })
         .addField({
           label: 'port',
-          value: conn.port,
+          value: conn.port.toString(),
           type: 'STRING',
         })
         .addField({
+          label: 'connection_string',
+          value: uri,
+          type: 'CONCEALED',
+        })
+        .addField({
           label: 'connection options',
-          value: conn.params,
+          value: JSON.stringify(conn.params),
           type: 'STRING',
         })
         .addField({
@@ -239,144 +253,5 @@ for (const banner of BANNERS) {
         .build()
       await op.createItem(vault.id, item)
     }
-
-    // const items = await op.items.listAll(vault.id)
-    // if (
-    //   items.elements.length > 0 &&
-    //   items.elements.some((i) => i.title === projectName.replace(/_/g, '-'))
-    // ) {
-    //   console.info(`Secrets for project ${projectName} already exist`)
-    // } else {
-    //   console.info(`Creating secrets for project ${projectName}`)
-    //   const {
-    //     data: { uri },
-    //   } = await neonApi.getConnectionUri({
-    //     projectId,
-    //     branch_id: branchId,
-    //     database_name: banner,
-    //     role_name: roleName,
-    //   })
-    //   const connectionDetails = parseConnectionUri(uri)
-    //   try {
-    //     const sectionId = createId()
-    //     let item = await op.items.create({
-    //       vaultId: vault.id,
-    //       category: onepassSdk.ItemCategory.Login,
-    //       title: projectName.replace(/_/g, '-').toLowerCase(),
-    //       fields: [
-    //         {
-    //           fieldType: onepassSdk.ItemFieldType.Text,
-    //           id: createId(),
-    //           title: 'database',
-    //           value: banner,
-    //           sectionId,
-    //         },
-    //         {
-    //           fieldType: onepassSdk.ItemFieldType.Text,
-    //           id: 'username',
-    //           title: 'username',
-    //           value: connectionDetails.username,
-    //         },
-    //         {
-    //           fieldType: onepassSdk.ItemFieldType.Concealed,
-    //           id: 'password',
-    //           title: 'password',
-    //           value: connectionDetails.password,
-    //         },
-    //         {
-    //           fieldType: onepassSdk.ItemFieldType.Text,
-    //           id: createId(),
-    //           title: 'server',
-    //           value: connectionDetails.host,
-    //           sectionId,
-    //         },
-    //         {
-    //           fieldType: onepassSdk.ItemFieldType.Text,
-    //           id: createId(),
-    //           title: 'port',
-    //           value: connectionDetails.port,
-    //           sectionId,
-    //         },
-    //         {
-    //           fieldType: onepassSdk.ItemFieldType.Text,
-    //           id: createId(),
-    //           title: 'connection options',
-    //           value: connectionDetails.params,
-    //           sectionId,
-    //         },
-    //       ],
-    //       sections: [{ id: sectionId, title: 'Database' }],
-    //       websites: [],
-    //       tags: [
-    //         'neon',
-    //         scriptName,
-    //         scriptName.replace(/_/g, '-').toLowerCase(),
-    //         projectName,
-    //         projectName.replace(/_/g, '-').toLowerCase(),
-    //         banner,
-    //       ],
-    //     })
-    //     // const ritem = await op.items.get(vault.id, item.id)
-    //     // await op.items.put({
-    //     //   ...ritem,
-    //     //   fields: [
-    //     //     // {
-    //     //     //   fieldType: onepassSdk.ItemFieldType.Unsupported,
-    //     //     //   id: 'database_type',
-    //     //     //   title: 'type',
-    //     //     //   value: 'PostgreSQL',
-    //     //     // },
-    //     //     {
-    //     //       fieldType: onepassSdk.ItemFieldType.Text,
-    //     //       id: 'database',
-    //     //       title: 'database',
-    //     //       value: banner,
-    //     //       sectionId: '',
-    //     //     },
-    //     //     {
-    //     //       fieldType: onepassSdk.ItemFieldType.Text,
-    //     //       id: 'username',
-    //     //       title: 'username',
-    //     //       value: connectionDetails.username,
-    //     //       sectionId: '',
-    //     //     },
-    //     //     {
-    //     //       fieldType: onepassSdk.ItemFieldType.Concealed,
-    //     //       id: 'password',
-    //     //       title: 'password',
-    //     //       value: connectionDetails.password,
-    //     //       sectionId: '',
-    //     //     },
-    //     //     {
-    //     //       fieldType: onepassSdk.ItemFieldType.Text,
-    //     //       id: 'hostname',
-    //     //       title: 'server',
-    //     //       value: connectionDetails.host,
-    //     //       sectionId: '',
-    //     //     },
-    //     //     {
-    //     //       fieldType: onepassSdk.ItemFieldType.Text,
-    //     //       id: 'port',
-    //     //       title: 'port',
-    //     //       value: connectionDetails.port,
-    //     //       sectionId: '',
-    //     //     },
-    //     //     {
-    //     //       fieldType: onepassSdk.ItemFieldType.Text,
-    //     //       id: 'options',
-    //     //       title: 'connection options',
-    //     //       value: connectionDetails.params,
-    //     //       sectionId: '',
-    //     //     },
-    //     //   ],
-    //     // })
-    //   } catch (error) {
-    //     console.error(error)
-    //     process.exit(1)
-    //   }
-    // }
   }
 }
-
-const exItem = await op.items.get(vault.id, 'ixx22fiiif6p4q4g72n2dyxxka')
-console.log(exItem)

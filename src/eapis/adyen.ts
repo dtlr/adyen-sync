@@ -1,9 +1,13 @@
 import axios from 'axios'
-import type { AdyenTerminalsResponse, StoreData, TerminalData } from '../types.js'
+import type {
+  AdyenStoresResponse,
+  AdyenTerminalsResponse,
+  StoreData,
+  TerminalData,
+} from 'types/adyen.js'
 
-import type { AdyenStoresResponse } from '../types.js'
-import { AdyenSyncError } from '../core/error.js'
-import { logger } from '../core/utils.js'
+import { AdyenSyncError } from '@/error.js'
+import { logger } from '@/core/utils.js'
 
 const { ADYEN_KEY, ADYEN_KEY_LIVE, ADYEN_KEY_TEST, APP_ENV } = process.env
 
@@ -47,7 +51,7 @@ export const fetchAdyenData = async ({
       page++
     } while (pagesTotal > page)
 
-    logger.debug({
+    logger('adyen-sync-eapis-adyen').debug({
       message: `Successfully fetched ${data.length} records`,
       requestId,
       data,

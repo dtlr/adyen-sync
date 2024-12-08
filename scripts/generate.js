@@ -1,22 +1,21 @@
-import { existsSync, mkdirSync, writeFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { createApiClient } from '@neondatabase/api-client'
-import { Octokit } from 'octokit'
+import { execSync } from 'child_process'
 
 import { drizzleConfig } from '../templates/drizzle-config.js'
 import { githubWorkflow } from '../templates/github-workflow.js'
-import { encryptSecret } from './utils.js'
 
-const BANNERS = ['dtlr', 'spc']
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
-})
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'))
+
+const scriptName = pkg.name.replace(/-/g, '_')
+
 const neonApi = createApiClient({
   apiKey: process.env.NEON_API_KEY,
 })
-
-const orgName = 'dtlr'
-const repoName = 'adyen-sync'
-let secrets = []
 
 ;(async () => {
   if (!existsSync('configs')) {
@@ -27,52 +26,60 @@ let secrets = []
     orgId: process.env.NEON_ORG_ID,
   })
 
-  const {
+  let {
     data: { projects },
   } = response
 
-  const project = projects.find((p) => p.name === 'adyen_sync')
+  projects = projects.filter((p) => p.name.startsWith(scriptName + '_'))
 
-  const { id } = project
   await Promise.all(
-    BANNERS.map(async (banner) => {
-      const {
-        data: { uri },
-      } = await neonApi.getConnectionUri({
-        projectId: id,
-        database_name: banner,
-        role_name: 'adyen_sync',
-      })
+    projects.map(async (project) => {
+      const { name } = project
+      const banner = name.split(scriptName + '_')[1]
 
       const safeName = banner.toLowerCase().replace(/_/g, '-')
       const path = `configs/${safeName}`
       const file = 'drizzle.config.ts'
       const envVarName = `${banner.toUpperCase()}_DATABASE_URI`
-      const encryptedUri = await encryptSecret(process.env.PUBLIC_KEY, uri)
-
-      secrets.push(envVarName)
 
       if (!existsSync(path)) {
         mkdirSync(path)
-        console.info('Set secret for:', safeName)
       }
 
-      if (existsSync(`${path}/${file}`)) {
+      if (!existsSync(`${path}/${file}`)) {
         writeFileSync(`${path}/${file}`, drizzleConfig(safeName, envVarName))
         console.info('Set drizzle config for:', safeName)
+      }
+
+      console.log('Run drizzle-kit generate for :', safeName)
+      try {
+        const output = execSync(`drizzle-kit generate --config=${path}/${file}`, {
+          encoding: 'utf-8',
+        })
+        if (output.trim()) {
+          console.log('Drizzle output:', output.trim())
+        }
+      } catch (error) {
+        console.error(`Failed to generate schema for ${safeName}:`, error.message)
+        if (error.stdout?.trim()) {
+          console.error('Output:', error.stdout.trim())
+        }
+        if (error.stderr?.trim()) {
+          console.error('Error:', error.stderr.trim())
+        }
       }
     }),
   )
 
-  if (!existsSync('.github')) {
-    mkdirSync('.github')
-  }
+  // if (!existsSync('.github')) {
+  //   mkdirSync('.github')
+  // }
 
-  if (!existsSync('.github/workflows')) {
-    mkdirSync('.github/workflows')
-  }
+  // if (!existsSync('.github/workflows')) {
+  //   mkdirSync('.github/workflows')
+  // }
 
-  const workflowContent = githubWorkflow(secrets)
-  writeFileSync('.github/workflows/run-migrations.yml', workflowContent)
-  console.info('Finished')
+  // const workflowContent = githubWorkflow()
+  // writeFileSync('.github/workflows/run-migrations.yml', workflowContent)
+  // console.info('Finished')
 })()

@@ -1,4 +1,4 @@
-name: Adyen Sync
+name: JDNA Sync
 
 on:
   push:
@@ -13,7 +13,7 @@ concurrency:
 
 env:
   JDNA_REGISTRY: ghcr.io/dtlr
-  IMAGE_NAME: adyen-sync
+  IMAGE_NAME: jdna-sync
 
 jobs:
   build:
@@ -48,8 +48,8 @@ jobs:
         with:
           images: ${{ env.JDNA_REGISTRY }}/${{ env.IMAGE_NAME }}
           labels: |
-            org.opencontainers.image.title=JMC Adyen Sync
-            org.opencontainers.image.description=Syncs Adyen data to JMC
+            org.opencontainers.image.title=JDNA Sync
+            org.opencontainers.image.description=Syncs JDNA data to databases and other services
             org.opencontainers.image.documentation=https://github.com/${{ github.repository }}/blob/main/README.md
             org.opencontainers.image.vendor=DTLR, Inc.
             org.opencontainers.image.url=https://github.com/${{ github.repository }}

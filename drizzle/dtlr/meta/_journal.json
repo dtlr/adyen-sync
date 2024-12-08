@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1733615206295,
+      "tag": "20241207234646_colorful_the_spike",
+      "breakpoints": true
+    }
+  ]
+}

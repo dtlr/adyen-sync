@@ -1,17 +1,26 @@
-import { Command } from '@oclif/core'
-import { logger } from '../core/utils.js'
-import { app } from '../web/index.js'
+import { logger } from '@core/utils.js'
+import { app } from '@web'
 import { serve } from '@hono/node-server'
+import { BaseCommand } from '@/base-command.js'
+import { Flags } from '@oclif/core'
 
-export class ServeCommand extends Command {
+export class ServeCommand extends BaseCommand<typeof ServeCommand> {
   static description = 'Serve the web app'
 
-  async run(): Promise<void> {
-    const { APP_PORT, APP_ENV } = process.env
+  static flags = {
+    port: Flags.integer({
+      description: 'The port to serve the app on',
+      default: 3000,
+      env: 'APP_PORT',
+    }),
+  }
 
-    const port = parseInt(APP_PORT || '3000')
-    logger.info(`Server is running on ${port}`)
-    logger.info(`App environment: ${APP_ENV}`)
+  async run(): Promise<void> {
+    const { flags } = await this.parse(ServeCommand)
+
+    const port = flags.port
+    logger('adyen-sync-serve').info(`Server is running on ${port}`)
+    logger('adyen-sync-serve').info(`App environment: ${flags['app-env']}`)
 
     serve({
       fetch: app.fetch,
