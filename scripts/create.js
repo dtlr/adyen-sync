@@ -4,17 +4,15 @@ import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { parseConnectionUri } from './utils.js'
-import { JDNAProperty } from '../src/constants.js'
 import 'dotenv/config'
 
 if (!process.env.NEON_API_KEY) {
   throw new Error('NEON_API_KEY is not set')
 }
 
-const BANNERS = JDNAProperty
-
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+const BANNERS = JSON.parse(readFileSync(join(__dirname, '../src/property.json'), 'utf8'))
 const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'))
 const op = OnePasswordConnect({
   serverURL: 'https://opconnect.az.dtlr.io',
@@ -90,6 +88,13 @@ for (const banner of BANNERS) {
     hasRunningOperations = false
     console.info(`Project created with id ${project.data.project.id}`)
     projectId = project.data.project.id
+    await storeSecrets(
+      vault,
+      banner,
+      project.data.branch.id,
+      projectId,
+      projectName + '_' + (project.data.branch.name === 'main' ? 'live' : 'test'),
+    )
   } else {
     console.info(`Project ${projectName} exists`)
     projectId = project.data.projects.find((p) => p.name === projectName)?.id
@@ -183,6 +188,24 @@ for (const banner of BANNERS) {
     console.log('Database details:', database.data)
   }
 
+  await storeSecrets(
+    vault,
+    banner,
+    branchId,
+    projectId,
+    projectName + '_' + (currentBranch === 'main' ? 'live' : 'test'),
+  )
+}
+
+/**
+ * Store secrets in 1Password
+ * @param {import('@1password/connect').Vault} vault - The vault to store the secrets in
+ * @param {string} banner - The fascia to store the secrets for
+ * @param {string} branchId - The branch id to store the secrets for
+ * @param {string} projectId - The project id to store the secrets for
+ * @param {string} projectName - The project name to store the secrets for
+ */
+async function storeSecrets(vault, banner, branchId, projectId, projectName) {
   // Create secrets
   if (vault && vault.id) {
     const {

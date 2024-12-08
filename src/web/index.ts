@@ -69,13 +69,13 @@ app.get('/fleet', async (c) => {
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
-    webLogger.error(err)
+    webLogger.error({ requestId: c.get('requestId'), message: 'Error caught', error: err })
     return c.json({ message: err.message, requestId: c.get('requestId') }, err.status)
   } else if (err instanceof AdyenSyncError) {
-    webLogger.error(err)
+    webLogger.error({ requestId: c.get('requestId'), message: 'Error caught', error: err })
     return c.json({ message: err.message, requestId: c.get('requestId') }, 400)
   } else {
-    webLogger.error(err)
+    webLogger.error({ requestId: c.get('requestId'), message: 'Error caught', error: err })
     return c.json(
       {
         name: 'UNHANDLED_ERROR',

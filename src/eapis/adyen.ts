@@ -51,7 +51,7 @@ export const fetchAdyenData = async ({
       page++
     } while (pagesTotal > page)
 
-    logger('adyen-sync-eapis-adyen').debug({
+    logger('eapis-adyen').debug({
       message: `Successfully fetched ${data.length} records`,
       requestId,
       data,

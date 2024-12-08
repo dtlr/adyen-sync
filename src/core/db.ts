@@ -1,8 +1,12 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { eq } from 'drizzle-orm'
-import { devDevicePersonalization, payAssignedPaymentDevice, payPaymentDevices } from './schema.js'
-import { POSWRKIDS } from '@core/constants.js'
-import { AdyenSyncError } from '@core/error.js'
+import {
+  devDevicePersonalization,
+  payAssignedPaymentDevice,
+  payPaymentDevices,
+} from '../db/schema.js'
+import { POSWRKIDS } from '@/constants.js'
+import { AdyenSyncError } from '@/error.js'
 import { logger, findDifference } from '@core/utils.js'
 
 const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, APP_ENV } = process.env
@@ -13,7 +17,7 @@ const dtlrDb = drizzle({ connection: dtlrConnectionString, casing: 'snake_case' 
 const spcConnectionString = `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT ?? 5432}/spc-${APP_ENV?.toLowerCase() ?? 'dev'}`
 const spcDb = drizzle({ connection: spcConnectionString, casing: 'snake_case' })
 
-export const updateDatabase = async ({
+export const updateJMDatabase = async ({
   requestId,
   data,
 }: {
@@ -27,7 +31,7 @@ export const updateDatabase = async ({
     let existingWorkstationIds: string[] = []
     for (const item of data) {
       logItem = item
-      logger.info({ message: `Processing ${item}`, requestId, item })
+      logger('db').info({ message: `Processing ${item}`, requestId, item })
       const bannerInitial = item[1].charAt(0).toLowerCase()
       let deviceId: string
 
@@ -36,13 +40,17 @@ export const updateDatabase = async ({
         .select({ deviceId: devDevicePersonalization.deviceId })
         .from(devDevicePersonalization)
         .where(eq(devDevicePersonalization.businessUnitId, item[2]))
-      logger.info({ message: `Found workstations for ${item}`, requestId, dbExistingWorkstations })
+      logger('db').info({
+        message: `Found workstations for ${item}`,
+        requestId,
+        dbExistingWorkstations,
+      })
 
       if (dbExistingWorkstations.length > 0)
         existingWorkstationIds = dbExistingWorkstations.map(
           (workstation) => workstation.deviceId?.split('-')[1]!,
         )
-      logger.info({
+      logger('db').info({
         message: `Existing workstation ids for ${item}`,
         requestId,
         existingWorkstationIds,
@@ -56,14 +64,14 @@ export const updateDatabase = async ({
         .limit(1)
 
       if (existingDDP.length > 0) {
-        logger.info({
+        logger('db').info({
           message: `Existing record found for ${item}`,
           requestId,
           item,
         })
         deviceId = existingDDP[0]?.deviceId!
       } else {
-        logger.info({
+        logger('db').info({
           message: `Existing record not found for ${item}`,
           requestId,
           item: item[0],
@@ -73,7 +81,7 @@ export const updateDatabase = async ({
           POSWRKIDS.map((i) => i.padStart(3, '0')),
           existingWorkstationIds,
         )
-        logger.info({
+        logger('db').info({
           message: `Available workstation ids for ${item}`,
           requestId,
           availableWorkstationIds,
@@ -83,10 +91,10 @@ export const updateDatabase = async ({
         if (!newWorkstationId) throw new Error('No new workstation ID found')
 
         deviceId = `${item[2]}-${newWorkstationId}`
-        logger.info({ message: `New computed device id for ${item}`, requestId, deviceId })
+        logger('db').info({ message: `New computed device id for ${item}`, requestId, deviceId })
       }
       await dtlrDb.transaction(async (tx) => {
-        logger.info({
+        logger('db').info({
           message: `Preparing to update dev_device_personalization for ${item}`,
           requestId,
           deviceId,
@@ -121,7 +129,7 @@ export const updateDatabase = async ({
               tagBusinessUnitId: item[2],
             },
           })
-        logger.info({
+        logger('db').info({
           message: `dev_device_personalization table updated for ${item}`,
           requestId,
           existingDDP,
@@ -132,7 +140,7 @@ export const updateDatabase = async ({
       if (item[1].toLowerCase() === 'dtlr') {
         // Using a transaction
         await dtlrDb.transaction(async (tx) => {
-          logger.info({
+          logger('db').info({
             message: `Preparing to update pay_payment_devices for ${item}`,
             requestId,
             deviceId,
@@ -157,7 +165,7 @@ export const updateDatabase = async ({
                 terminalId: item[0],
               },
             })
-          logger.info({
+          logger('db').info({
             message: `pay_payment_devices table updated for ${item}`,
             requestId,
             item,
@@ -171,7 +179,7 @@ export const updateDatabase = async ({
             },
           })
           // Update pay_assigned_payment_device
-          logger.info({
+          logger('db').info({
             message: `Preparing to update pay_assigned_payment_device for ${item}`,
             requestId,
             deviceId,
@@ -192,7 +200,7 @@ export const updateDatabase = async ({
                 permanentFlag: 1,
               },
             })
-          logger.info({
+          logger('db').info({
             message: `pay_assigned_payment_device table updated for ${item}`,
             requestId,
             item,
@@ -208,7 +216,7 @@ export const updateDatabase = async ({
       if (item[1].toLowerCase() === 'spc') {
         // Using a transaction
         await spcDb.transaction(async (tx) => {
-          logger.info({
+          logger('db').info({
             message: `Preparing to update pay_payment_devices for ${item}`,
             requestId,
             deviceId,
@@ -233,7 +241,7 @@ export const updateDatabase = async ({
                 terminalId: item[0],
               },
             })
-          logger.info({
+          logger('db').info({
             message: `pay_payment_devices table updated for ${item}`,
             requestId,
             item,
@@ -247,7 +255,7 @@ export const updateDatabase = async ({
             },
           })
           // Update pay_assigned_payment_device
-          logger.info({
+          logger('db').info({
             message: `Preparing to update pay_assigned_payment_device for ${item}`,
             requestId,
             deviceId,
@@ -268,7 +276,7 @@ export const updateDatabase = async ({
                 permanentFlag: 1,
               },
             })
-          logger.info({
+          logger('db').info({
             message: `pay_assigned_payment_device table updated for ${item}`,
             requestId,
             item,
@@ -282,7 +290,7 @@ export const updateDatabase = async ({
         })
       }
     }
-    logger.info({
+    logger('db').info({
       message: `Successfully updated ${data.length} records`,
       requestId,
       items: data,

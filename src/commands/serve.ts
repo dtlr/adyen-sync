@@ -19,8 +19,8 @@ export class ServeCommand extends BaseCommand<typeof ServeCommand> {
     const { flags } = await this.parse(ServeCommand)
 
     const port = flags.port
-    logger('adyen-sync-serve').info(`Server is running on ${port}`)
-    logger('adyen-sync-serve').info(`App environment: ${flags['app-env']}`)
+    logger('commands-serve').info(`Server is running on ${port}`)
+    logger('commands-serve').info(`App environment: ${flags['app-env']}`)
 
     serve({
       fetch: app.fetch,

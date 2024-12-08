@@ -1,22 +1,26 @@
-import { createLogger as createWinstonLogger, transports, format } from 'winston'
-import { config } from 'winston'
-import { STOREREFPATTERN } from '../constants.js'
+import { config, createLogger as createWinstonLogger, transports, format } from 'winston'
+import { STOREREFPATTERN } from '@/constants.js'
 import { init } from '@paralleldrive/cuid2'
 
-export const createLogger = (service?: string) =>
+export const createLogger = (context?: string) =>
   createWinstonLogger({
-    levels: config.syslog.levels,
+    levels: config.npm.levels,
     level: (process.env.LOG_LEVEL as string)?.toLowerCase() || 'info',
-    defaultMeta: { service: service || 'adyen-sync' },
+    defaultMeta: { context: context || 'jdna-sync' },
     transports: [new transports.Console({ forceConsole: true })],
-    format: format.combine(format.timestamp(), format.errors({ stack: true }), format.json()),
+    format: format.combine(
+      format.timestamp(),
+      format.errors({ stack: true }),
+      format.json(),
+      format.prettyPrint(),
+    ),
   })
 
-export const logger = (service?: string) => {
-  return createLogger(service)
+export const logger = (context?: string) => {
+  return createLogger(context)
 }
-export const cliLogger = logger('adyen-sync-cli')
-export const webLogger = logger('adyen-sync-web')
+export const cliLogger = logger('cli')
+export const webLogger = logger('web')
 
 export const parseStoreRef = (reference: string) => {
   const match = reference.match(STOREREFPATTERN)

@@ -1,38 +1,59 @@
-import { updateDatabase } from '@db/index.js'
 import { fetchAdyenData } from '@eapis/adyen.js'
-import { TerminalData, StoreData } from 'types/adyen.js'
+import { TerminalData } from 'types/adyen.js'
 import { logger, parseStoreRef } from '../utils.js'
+import { APP_ENVS, JDNAProperty } from '@/constants.js'
 
-export const processTerminals = async ({
+export const getJDNATerminals = async ({
   requestId,
+  fascia,
+  store_env,
 }: {
   requestId: string
-}): Promise<[string, string, string][]> => {
-  logger('adyen-sync-terminals').info({ requestId, message: 'Processing terminals' })
-  const stores = (await fetchAdyenData({
+  fascia: (typeof JDNAProperty)[number] | 'all'
+  store_env: (typeof APP_ENVS)[number]
+}): Promise<TerminalData[]> => {
+  logger('get-jdna-terminals').debug({
     requestId,
-    opts: {
-      type: 'stores',
-    },
-  })) as StoreData[]
-  logger('adyen-sync-terminals').debug({ requestId, message: 'Fetched stores', stores })
+    message: `Syncing terminals for fascia: ${fascia}`,
+  })
   const terminals = (await fetchAdyenData({
     requestId,
     opts: {
       type: 'terminals',
     },
   })) as TerminalData[]
-  logger('adyen-sync-terminals').debug({ requestId, message: 'Fetched terminals', terminals })
+  return terminals
+}
+
+export const processTerminals = async ({
+  requestId,
+  jdnaTerminals,
+  fascia,
+  store_env,
+}: {
+  requestId: string
+  jdnaTerminals: TerminalData[]
+  fascia: (typeof JDNAProperty)[number] | 'all'
+  store_env: (typeof APP_ENVS)[number]
+}): Promise<[string, string, string][]> => {
+  logger('terminals').info({ requestId, message: 'Processing terminals' })
+  // const stores = (await fetchAdyenData({
+  //   requestId,
+  //   opts: {
+  //     type: 'stores',
+  //   },
+  // })) as StoreData[]
+  logger('terminals').debug({ requestId, message: 'Fetched stores', stores })
   const mposDevices = terminals.filter(
     (terminal) =>
       terminal.model === 'S1E2L' && terminal.assignment.status.toLowerCase() != 'inventory',
   )
-  logger('adyen-sync-terminals').debug({ requestId, message: 'Filtered terminals', mposDevices })
+  logger('terminals').debug({ requestId, message: 'Filtered terminals', mposDevices })
   const jmData: [string, string, string][] = []
   for (const mposDevice of mposDevices) {
     const store = stores.find((store) => store.id === mposDevice.assignment.storeId)
     if (!store?.reference) {
-      logger('adyen-sync-terminals').error({
+      logger('terminals').error({
         requestId,
         name: 'ROUTE_FLEET',
         area: 'Store reference processing',
@@ -45,7 +66,7 @@ export const processTerminals = async ({
     }
     const storeRef = parseStoreRef(store.reference)
     if (!storeRef?.prefix || !storeRef?.number) {
-      logger('adyen-sync-terminals').error({
+      logger('terminals').error({
         requestId,
         name: 'ROUTE_FLEET',
         area: 'Store reference processing',

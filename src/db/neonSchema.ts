@@ -1,6 +1,6 @@
 import { init } from '@paralleldrive/cuid2'
-import { pgTable, uuid, varchar, integer, real } from 'drizzle-orm/pg-core'
-import { commonTime } from './common.js'
+import { pgTable, uuid, varchar, real, boolean } from 'drizzle-orm/pg-core'
+import { commonTime } from './common'
 import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
 import { z } from 'zod'
 import { relations } from 'drizzle-orm'
@@ -10,7 +10,15 @@ const createId = init({
 })
 
 export const stores = pgTable('stores', {
-  id: uuid('id').$defaultFn(createId).primaryKey(),
+  id: varchar('id', { length: 255 }).$defaultFn(createId).primaryKey(),
+  code: varchar('code', { length: 255 }).notNull().unique(),
+  aptosStoreCode: varchar('aptos_store_code', { length: 255 }).notNull(),
+  banner: varchar('banner', { length: 24 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  shortName: varchar('short_name', { length: 255 }),
+  status: boolean('status').notNull().default(false),
+  district: varchar('district', { length: 255 }),
+  region: varchar('region', { length: 255 }),
   addressCity: varchar('address_city', { length: 255 }),
   addressEmail: varchar('address_email', { length: 255 }),
   addressLine1: varchar('address_line1', { length: 255 }),
@@ -18,16 +26,8 @@ export const stores = pgTable('stores', {
   addressName: varchar('address_name', { length: 255 }),
   addressState: varchar('address_state', { length: 255 }),
   addressZipCode: varchar('address_zip_code', { length: 255 }),
-  channel: varchar('channel', { length: 255 }),
-  code: varchar('code', { length: 255 }).notNull().unique(),
-  countryId: integer('country_id'),
-  district: varchar('district', { length: 255 }),
   latitude: real('latitude'),
-  locationTypeLabel: varchar('location_type_label', { length: 255 }),
   longitude: real('longitude'),
-  name: varchar('name', { length: 255 }).notNull(),
-  region: varchar('region', { length: 255 }),
-  status: varchar('status', { length: 255 }),
   adyenMerchantId: varchar('adyen_merchant_id', { length: 255 }),
   adyenId: varchar('adyen_id', { length: 255 }),
   adyenReference: varchar('adyen_reference', { length: 255 }),
@@ -38,18 +38,19 @@ export const stores = pgTable('stores', {
 
 export const SelectStoreSchema = createSelectSchema(stores)
 export const InsertStoreSchema = createInsertSchema(stores)
-export type InternalStore = z.infer<typeof SelectStoreSchema>
+export type SelectInternalStore = z.infer<typeof SelectStoreSchema>
+export type InsertInternalStore = z.infer<typeof InsertStoreSchema>
 
 export const terminals = pgTable('terminals', {
-  id: uuid('id').$defaultFn(createId).primaryKey(),
+  id: varchar('id', { length: 255 }).$defaultFn(createId).primaryKey(),
+  companyId: varchar('company_id', { length: 255 }).notNull(),
+  merchantId: varchar('merchant_id', { length: 255 }).notNull(),
+  adyenStoreId: varchar('adyen_store_id', { length: 255 }).notNull(),
+  storeId: varchar('store_id', { length: 255 }).notNull(),
   name: varchar('name', { length: 255 }),
   model: varchar('model', { length: 255 }),
   serialNumber: varchar('serial_number', { length: 255 }),
   firmwareVersion: varchar('firmware_version', { length: 255 }),
-  companyId: varchar('company_id', { length: 255 }).notNull(),
-  merchantId: varchar('merchant_id', { length: 255 }).notNull(),
-  storeId: uuid('store_id').notNull(),
-  adyenStoreId: varchar('adyen_store_id', { length: 255 }).notNull(),
   cellularIccid: varchar('cellular_iccid', { length: 255 }),
   wifiIpAddress: varchar('wifi_ip_address', { length: 255 }),
   wifiMacAddress: varchar('wifi_mac_address', { length: 255 }),

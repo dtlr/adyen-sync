@@ -12,7 +12,7 @@ COPY bin/ ./bin
 
 RUN npm ci && \
   npm run build && \
-  npm prune --production
+  npm prune --omit=dev
 
 FROM base AS runner
 WORKDIR /app

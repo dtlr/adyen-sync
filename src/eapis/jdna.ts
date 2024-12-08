@@ -1,4 +1,4 @@
-import type { LocationsMap, LocationLocal } from 'types'
+import type { LocationLocal } from 'types'
 import { localLocationSchema } from 'types'
 import { APP_ENVS, JDNAProperty } from '@/constants.js'
 import { AdyenSyncError } from '@/error'
@@ -8,10 +8,10 @@ export const getLocations = async (
   requestId: string,
   store_env: (typeof APP_ENVS)[number],
   property?: (typeof JDNAProperty)[number],
-): Promise<LocationsMap> => {
+) => {
   const { LOCATIONSAPI_URL, LOCATIONSAPI_CLIENT_ID, LOCATIONSAPI_CLIENT_SECRET } = process.env
 
-  logger('adyen-sync-get-locations').debug({
+  logger('get-locations').debug({
     requestId,
     message: `Getting locations for fascia: ${property}`,
     extraInfo: {
@@ -32,7 +32,7 @@ export const getLocations = async (
     })
   }
 
-  const locationsMap: LocationsMap = new Map()
+  const locationsMap = new Map()
   const locations: LocationLocal[] = []
   let locs_filtered: LocationLocal[] = []
   let locResponse
@@ -60,7 +60,7 @@ export const getLocations = async (
   }
   const data = (await locResponse.json()) as unknown as Array<unknown>
 
-  logger('adyen-sync-get-locations').debug({
+  logger('get-locations').debug({
     requestId,
     message: `Got ${data.length} locations`,
     extraInfo: {
@@ -74,7 +74,7 @@ export const getLocations = async (
   for (const loc of data) {
     const tmpLoc = localLocationSchema.safeParse(loc)
     if (!tmpLoc.success) {
-      logger('adyen-sync-get-locations').error({
+      logger('get-locations').error({
         requestId,
         message: tmpLoc.error.message,
         cause: {
@@ -108,10 +108,9 @@ export const getLocations = async (
       ]
       const otherLocs = ['6000', '6001', '7001', '7777', '8001', '8002', '8888']
       locs_filtered =
-        store_env && (store_env.toLowerCase() === 'prod' || store_env.toLowerCase() === 'live')
+        store_env && store_env.toLowerCase() === 'live'
           ? locations.filter(
               (item) =>
-                item.active_flag &&
                 !closedLocs.includes(item.location_code) &&
                 !otherLocs.includes(item.location_code) &&
                 !['9740', '9741', '9750', '9751', '9736', '9737', '9738', '9739'].includes(
@@ -127,12 +126,11 @@ export const getLocations = async (
     }
     default: {
       locs_filtered =
-        store_env && (store_env.toLowerCase() === 'prod' || store_env.toLowerCase() === 'live')
+        store_env && store_env.toLowerCase() === 'live'
           ? locations.filter(
               (item) =>
                 item.region !== 'Distribution Center' &&
                 item.region !== 'E-Commerce' &&
-                item.active_flag &&
                 item.location_name !== 'SA REQUIRED' &&
                 item.location_name !== 'DO NOT USE' &&
                 item.location_name !== 'Promo Use Only' &&
@@ -147,7 +145,7 @@ export const getLocations = async (
   }
 
   locs_filtered.map((obj) => {
-    const { channel, location_code, active_flag, location_short_name, ...rest } = obj
+    const { channel, location_code, ...rest } = obj
     switch (channel) {
       case 'DTLR': {
         locationsMap.set('DTLR' + location_code, rest)
@@ -159,7 +157,7 @@ export const getLocations = async (
     }
   })
 
-  logger('adyen-sync-get-locations').debug({
+  logger('get-locations').debug({
     requestId,
     message: `Got ${locationsMap.size} locations`,
     extraInfo: {
@@ -170,5 +168,5 @@ export const getLocations = async (
     },
   })
 
-  return locationsMap
+  return locationsMap as Map<string, Omit<LocationLocal, 'location_code' | 'channel'>>
 }

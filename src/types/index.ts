@@ -173,6 +173,8 @@ export const localLocationSchema = locationSchema.pick({
   location_code: true,
   location_name: true,
   location_short_name: true,
+  longitude: true,
+  latitude: true,
   active_flag: true,
   chain: true,
   channel: true,
@@ -182,14 +184,3 @@ export const localLocationSchema = locationSchema.pick({
   addresses: true,
 })
 export type LocationLocal = z.infer<typeof localLocationSchema>
-
-export const locationsMapSchema = z.map(
-  z.string(),
-  localLocationSchema.omit({
-    location_short_name: true,
-    location_code: true,
-    active_flag: true,
-    channel: true,
-  }),
-)
-export type LocationsMap = z.infer<typeof locationsMapSchema>

@@ -5,8 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1733615206295,
-      "tag": "20241207234646_colorful_the_spike",
+      "when": 1733694217583,
+      "tag": "20241208214337_powerful_bug",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1733694518185,
+      "tag": "20241208214838_material_wasp",
       "breakpoints": true
     }
   ]

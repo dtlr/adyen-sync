@@ -1,6 +1,6 @@
 {
-  "id": "09bc0781-3186-4b1a-bc8b-eaeb69c162fb",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "0a9faaca-087f-439b-b213-3aed90041c9a",
+  "prevId": "1b36b464-2f2a-4efa-8079-8502af427428",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -10,9 +10,58 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "varchar(255)",
           "primaryKey": true,
           "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aptos_store_code": {
+          "name": "aptos_store_code",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "banner": {
+          "name": "banner",
+          "type": "varchar(24)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "short_name": {
+          "name": "short_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "district": {
+          "name": "district",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "region": {
+          "name": "region",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
         },
         "address_city": {
           "name": "address_city",
@@ -56,63 +105,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "channel": {
-          "name": "channel",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "code": {
-          "name": "code",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "country_id": {
-          "name": "country_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "district": {
-          "name": "district",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "latitude": {
           "name": "latitude",
           "type": "real",
           "primaryKey": false,
           "notNull": false
         },
-        "location_type_label": {
-          "name": "location_type_label",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
         "longitude": {
           "name": "longitude",
           "type": "real",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "region": {
-          "name": "region",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         },
@@ -188,8 +189,32 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "varchar(255)",
           "primaryKey": true,
+          "notNull": true
+        },
+        "company_id": {
+          "name": "company_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "merchant_id": {
+          "name": "merchant_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "adyen_store_id": {
+          "name": "adyen_store_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "store_id": {
+          "name": "store_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
           "notNull": true
         },
         "name": {
@@ -215,30 +240,6 @@
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
-        },
-        "company_id": {
-          "name": "company_id",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "merchant_id": {
-          "name": "merchant_id",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "store_id": {
-          "name": "store_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "adyen_store_id": {
-          "name": "adyen_store_id",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
         },
         "cellular_iccid": {
           "name": "cellular_iccid",

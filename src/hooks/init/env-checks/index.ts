@@ -1,6 +1,7 @@
 import { Hook } from '@oclif/core'
-import { AdyenSyncError } from '@core/error.js'
+import { AdyenSyncError } from '@/error.js'
 import 'dotenv/config'
+import { logger } from '@/core/utils'
 
 const checkEnv: Hook<'init'> = async function () {
   const {
@@ -14,6 +15,8 @@ const checkEnv: Hook<'init'> = async function () {
     ADYEN_KEY_TEST,
     ADYEN_KEY_LIVE,
   } = process.env
+
+  logger('init-env-checks').debug({ message: 'Checking environment variables' })
 
   if (NODE_ENV !== 'test' && !DATABASE_URL && (!DB_USER || !DB_PASSWORD || !DB_HOST))
     throw new AdyenSyncError({
