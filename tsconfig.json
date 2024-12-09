@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "declaration": true,
     "composite": false,
     "target": "esnext",
     "module": "ESNext",
@@ -28,6 +29,6 @@
       "@web/*": ["./src/web/*"]
     }
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests"]
 }

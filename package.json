@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "author": "Nigel Williams-Lucas <nwilliams-lucas@dtlr.com>",
   "scripts": {
-    "build": "shx rm -rf dist node_modules/.cache && tsc --project tsconfig.json",
+    "build": "shx rm -rf dist node_modules/.cache && node bin/bundle.js",
     "dev": "./bin/dev.js",
     "clean": "shx rm -rf node_modules .cache dist",
     "cf:dev": "npm run dev && npx cloudflared tunnel --url http://localhost:3000",
@@ -53,6 +53,7 @@
     "@types/pg": "^8",
     "@vitest/coverage-v8": "^2",
     "drizzle-kit": "^0.29",
+    "esbuild": "^0.24.0",
     "eslint": "^9",
     "msw": "^2",
     "prettier": "^3",
