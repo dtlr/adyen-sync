@@ -114,33 +114,17 @@ resource "kubernetes_manifest" "argo_app" {
               },
               {
                 patch = <<-EOT
-                - op: replace
-                  path: /spec/data/0/remoteRef/property
-                  value: ${terraform.workspace == "prod" ? "credential" : "credential-test"}
-                
-                EOT
-                target = {
-                  kind = "ExternalSecret"
-                  name = "app-secret"
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/data/5/remoteRef/key
-                  value: ${terraform.workspace == "prod" ? "${local.app_name}-dtlr-live" : "${local.app_name}-dtlr-test"}
-                
-                EOT
-                target = {
-                  kind = "ExternalSecret"
-                  name = "app-secret"
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/data/6/remoteRef/key
-                  value: ${terraform.workspace == "prod" ? "${local.app_name}-spc-live" : "${local.app_name}-spc-test"}
+                - op: add
+                  path: /spec/data
+                  value: |
+                    - secretKey: DTLR_DATABASE_URI
+                      remoteRef:
+                        key: ${terraform.workspace == "main" ? "${local.app_name}-dtlr-live" : "${local.app_name}-dtlr-test"}
+                        property: connection_string
+                    - secretKey: SPC_DATABASE_URI
+                      remoteRef:
+                        key: ${terraform.workspace == "main" ? "${local.app_name}-spc-live" : "${local.app_name}-spc-test"}
+                        property: connection_string
                 
                 EOT
                 target = {
@@ -166,7 +150,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: add
                   path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
-                  value: "${local.app_name}${terraform.workspace == "prod" ? "" : "-test"}.jdna.io"
+                  value: "${local.app_name}${terraform.workspace == "main" ? "" : "-test"}.jdna.io"
                 
                 EOT
                 target = {
@@ -178,7 +162,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/rules/0/host
-                  value: "${local.app_name}${terraform.workspace == "prod" ? "" : "-test"}.jdna.io"
+                  value: "${local.app_name}${terraform.workspace == "main" ? "" : "-test"}.jdna.io"
                 
                 EOT
                 target = {
@@ -190,7 +174,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/tls/0/hosts/0
-                  value: "${local.app_name}${terraform.workspace == "prod" ? "" : "-test"}.jdna.io"
+                  value: "${local.app_name}${terraform.workspace == "main" ? "" : "-test"}.jdna.io"
                 
                 EOT
                 target = {
