@@ -1,4 +1,4 @@
 image_tags = {
-  main = "sha-a3f2eab"
+  main = "sha-5cab9d2"
   qa   = "sha-821d2b2"
 }
