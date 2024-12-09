@@ -114,18 +114,9 @@ resource "kubernetes_manifest" "argo_app" {
               },
               {
                 patch = <<-EOT
-                - op: add
-                  path: /spec/data
-                  value: |
-                    - secretKey: DTLR_DATABASE_URI
-                      remoteRef:
-                        key: ${terraform.workspace == "main" ? "${local.app_name}-dtlr-live" : "${local.app_name}-dtlr-test"}
-                        property: connection_string
-                    - secretKey: SPC_DATABASE_URI
-                      remoteRef:
-                        key: ${terraform.workspace == "main" ? "${local.app_name}-spc-live" : "${local.app_name}-spc-test"}
-                        property: connection_string
-                
+                - op: replace
+                  path: /spec/data/0/property
+                  value: ${terraform.workspace == "main" ? "credential" : "credential-test"}
                 EOT
                 target = {
                   kind = "ExternalSecret"
@@ -198,7 +189,7 @@ resource "kubernetes_manifest" "argo_app" {
           }
           path           = "argo"
           repoURL        = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
-          targetRevision = "HEAD"
+          targetRevision = terraform.workspace
         },
       ]
       syncPolicy = {
