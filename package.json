@@ -9,7 +9,7 @@
     "build": "shx rm -rf dist node_modules/.cache && node bin/bundle.js",
     "dev": "./bin/dev.js",
     "clean": "shx rm -rf node_modules .cache dist",
-    "cf:dev": "npm run dev && npx cloudflared tunnel --url http://localhost:3000",
+    "cf:dev": "npm run dev -- serve && npx cloudflared tunnel --url http://localhost:${APP_PORT:-3000}",
     "neon:create": "node scripts/create.js",
     "neon:generate": "node scripts/generate.js",
     "neon:migrate": "node scripts/migrate.js",
