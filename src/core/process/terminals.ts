@@ -1,18 +1,22 @@
 import { fetchAdyenData } from '@eapis/adyen.js'
-import { TerminalData } from 'types/adyen.js'
+import { AdyenTerminal } from 'types/adyen.js'
 import { logger, parseStoreRef } from '../utils.js'
 import { APP_ENVS, JDNAProperty } from '@/constants.js'
+import { InsertInternalTerminal, stores } from '@/db/neonSchema.js'
+import { eq } from 'drizzle-orm'
+import { drizzle } from 'drizzle-orm/neon-serverless'
+import * as neonSchema from '@/db/neonSchema.js'
 
-export const getJDNATerminals = async ({
+export const getAdyenTerminals = async ({
   requestId,
   fascia,
-  store_env,
+  storeEnv,
 }: {
   requestId: string
-  fascia: (typeof JDNAProperty)[number] | 'all'
-  store_env: (typeof APP_ENVS)[number]
-}): Promise<TerminalData[]> => {
-  logger('get-jdna-terminals').debug({
+  fascia: keyof typeof JDNAProperty | 'all'
+  storeEnv: (typeof APP_ENVS)[number]
+}): Promise<AdyenTerminal[]> => {
+  logger('get-adyen-terminals').debug({
     requestId,
     message: `Syncing terminals for fascia: ${fascia}`,
   })
@@ -20,62 +24,85 @@ export const getJDNATerminals = async ({
     requestId,
     opts: {
       type: 'terminals',
+      merchantIds: fascia === 'all' ? undefined : JDNAProperty[fascia],
     },
-  })) as TerminalData[]
+    appEnv: storeEnv,
+  })) as AdyenTerminal[]
   return terminals
 }
 
 export const processTerminals = async ({
   requestId,
-  jdnaTerminals,
+  adyenTerminals,
   fascia,
-  store_env,
+  storeEnv,
 }: {
   requestId: string
-  jdnaTerminals: TerminalData[]
-  fascia: (typeof JDNAProperty)[number] | 'all'
-  store_env: (typeof APP_ENVS)[number]
-}): Promise<[string, string, string][]> => {
-  logger('terminals').info({ requestId, message: 'Processing terminals' })
-  // const stores = (await fetchAdyenData({
-  //   requestId,
-  //   opts: {
-  //     type: 'stores',
-  //   },
-  // })) as StoreData[]
-  logger('terminals').debug({ requestId, message: 'Fetched stores', stores })
-  const mposDevices = terminals.filter(
-    (terminal) =>
-      terminal.model === 'S1E2L' && terminal.assignment.status.toLowerCase() != 'inventory',
-  )
-  logger('terminals').debug({ requestId, message: 'Filtered terminals', mposDevices })
-  const jmData: [string, string, string][] = []
-  for (const mposDevice of mposDevices) {
-    const store = stores.find((store) => store.id === mposDevice.assignment.storeId)
-    if (!store?.reference) {
-      logger('terminals').error({
-        requestId,
-        name: 'ROUTE_FLEET',
-        area: 'Store reference processing',
-        message: 'Unable to find store reference',
-        store,
-        stores,
-        mposDevice,
-      })
-      continue
-    }
-    const storeRef = parseStoreRef(store.reference)
-    if (!storeRef?.prefix || !storeRef?.number) {
-      logger('terminals').error({
-        requestId,
-        name: 'ROUTE_FLEET',
-        area: 'Store reference processing',
-        message: `Store ${store.id} reference, ${store.reference}, is not in the expected format.`,
-      })
-      continue
-    }
-    jmData.push([mposDevice.id, storeRef.prefix, storeRef.number])
+  adyenTerminals: AdyenTerminal[]
+  fascia: keyof typeof JDNAProperty | 'all'
+  storeEnv: (typeof APP_ENVS)[number]
+}): Promise<string[]> => {
+  logger('process-terminals').info({ requestId, message: 'Processing terminals' })
+  const items: InsertInternalTerminal[] = []
+  const terminalIds: string[] = []
+
+  for (const terminal of adyenTerminals) {
+    items.push({
+      model: terminal.model,
+      serialNumber: terminal.serialNumber,
+      firmwareVersion: terminal.firmwareVersion,
+      companyId: terminal.assignment.companyId,
+      merchantId: terminal.assignment.merchantId,
+      adyenStoreId: terminal.assignment.storeId,
+      status: terminal.assignment.status,
+      name: terminal.id,
+      cellularIccid: terminal.connectivity?.cellular?.iccid,
+      cellularStatus: terminal.connectivity?.cellular?.status,
+      ethernetMacAddress: terminal.connectivity?.ethernet?.macAddress,
+      ethernetIpAddress: terminal.connectivity?.ethernet?.ipAddress,
+      ethernetLinkNegotiation: terminal.connectivity?.ethernet?.linkNegotiation,
+      wifiIpAddress: terminal.connectivity?.wifi?.ipAddress,
+      wifiMacAddress: terminal.connectivity?.wifi?.macAddress,
+      bluetoothMacAddress: terminal.connectivity?.bluetooth?.macAddress,
+      bluetoothIpAddress: terminal.connectivity?.bluetooth?.ipAddress,
+      lastActivityAt: terminal.lastActivityAt,
+      lastTransactionAt: terminal.lastTransactionAt,
+      restartLocalTime: terminal.restartLocalTime,
+    })
   }
-  // await updateDatabase({ requestId, data: jmData })
-  return jmData
+
+  for (const banner of Object.keys(JDNAProperty)) {
+    const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
+    if (!connString) {
+      logger('process-terminals').error({
+        requestId,
+        message: `No database connection string found for ${banner}`,
+      })
+      continue
+    }
+    const db = drizzle(connString, { schema: neonSchema })
+    await db.transaction(async (tx) => {
+      for (const item of items) {
+        let storeId: string | undefined
+        if (item.adyenStoreId) {
+          const result = await tx
+            .select({ id: neonSchema.stores.id })
+            .from(neonSchema.stores)
+            .where(eq(neonSchema.stores.adyenId, item.adyenStoreId))
+          if (result && result.length > 0) {
+            storeId = result[0].id
+          }
+        }
+        await tx
+          .insert(neonSchema.terminals)
+          .values({ ...item, storeId })
+          .onConflictDoUpdate({
+            target: [neonSchema.terminals.serialNumber],
+            set: { ...item, storeId },
+          })
+        terminalIds.push(...items.map((item) => item.id).filter((id) => id !== undefined))
+      }
+    })
+  }
+  return terminalIds
 }

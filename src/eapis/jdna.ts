@@ -6,7 +6,7 @@ import { logger } from '@/core/utils'
 
 export const getLocations = async (
   requestId: string,
-  store_env: (typeof APP_ENVS)[number],
+  storeEnv: (typeof APP_ENVS)[number],
   property?: (typeof JDNAProperty)[number],
 ) => {
   const { LOCATIONSAPI_URL, LOCATIONSAPI_CLIENT_ID, LOCATIONSAPI_CLIENT_SECRET } = process.env
@@ -17,7 +17,7 @@ export const getLocations = async (
     extraInfo: {
       function: 'getLocations',
       property,
-      store_env,
+      storeEnv,
     },
   })
 
@@ -66,7 +66,7 @@ export const getLocations = async (
     extraInfo: {
       function: 'getLocations',
       property,
-      store_env,
+      storeEnv,
       data,
     },
   })
@@ -83,7 +83,7 @@ export const getLocations = async (
         extraInfo: {
           function: 'getLocations',
           property,
-          store_env,
+          storeEnv,
           loc,
         },
       })
@@ -108,7 +108,7 @@ export const getLocations = async (
       ]
       const otherLocs = ['6000', '6001', '7001', '7777', '8001', '8002', '8888']
       locs_filtered =
-        store_env && store_env.toLowerCase() === 'live'
+        storeEnv && storeEnv.toLowerCase() === 'live'
           ? locations.filter(
               (item) =>
                 !closedLocs.includes(item.location_code) &&
@@ -126,7 +126,7 @@ export const getLocations = async (
     }
     default: {
       locs_filtered =
-        store_env && store_env.toLowerCase() === 'live'
+        storeEnv && storeEnv.toLowerCase() === 'live'
           ? locations.filter(
               (item) =>
                 item.region !== 'Distribution Center' &&
@@ -163,7 +163,7 @@ export const getLocations = async (
     extraInfo: {
       function: 'getLocations',
       property,
-      store_env,
+      storeEnv,
       data: Array.from(locationsMap.entries()),
     },
   })

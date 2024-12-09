@@ -15,6 +15,41 @@
       "when": 1733694517620,
       "tag": "20241208214837_talented_apocalypse",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1733700797248,
+      "tag": "20241208233317_open_captain_america",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1733704038187,
+      "tag": "20241209002718_outstanding_white_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1733705237793,
+      "tag": "20241209004717_oval_the_leader",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1733706037060,
+      "tag": "20241209010037_third_lady_bullseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1733706074845,
+      "tag": "20241209010114_previous_captain_stacy",
+      "breakpoints": true
     }
   ]
 }

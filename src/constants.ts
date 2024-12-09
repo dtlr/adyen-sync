@@ -11,7 +11,7 @@ export const STOREREFPATTERN = /^([A-Z]+)(\d+)$/
 
 export const JDNAProperty = JSON.parse(
   readFileSync(join(__dirname, '../src/property.json'), 'utf8'),
-) as string[]
+) as Record<string, string>
 
 export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const
 

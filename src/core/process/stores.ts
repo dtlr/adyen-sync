@@ -4,14 +4,17 @@ import { type InsertInternalStore } from '@/db/neonSchema'
 import { getLocations } from '@/eapis/jdna'
 import { drizzle } from 'drizzle-orm/neon-serverless'
 import * as neonSchema from '@db/neonSchema.js'
+import { fetchAdyenData } from '@/eapis/adyen'
+import { AdyenStore } from '@/types/adyen'
+
 export const getJDNAStores = async ({
   requestId,
   fascia,
-  store_env,
+  storeEnv,
 }: {
   requestId: string
-  fascia: (typeof JDNAProperty)[number] | 'all'
-  store_env: (typeof APP_ENVS)[number]
+  fascia: keyof typeof JDNAProperty | 'all'
+  storeEnv: (typeof APP_ENVS)[number]
 }) => {
   logger('get-jdna-stores').debug({
     requestId,
@@ -21,31 +24,53 @@ export const getJDNAStores = async ({
 
   if (fascia === 'all') {
     // get all stores
-    const dtlrStores = await getLocations(requestId, store_env, 'dtlr')
-    const shoePalaceStores = await getLocations(requestId, store_env, 'spc')
+    const dtlrStores = await getLocations(requestId, storeEnv, 'dtlr')
+    const shoePalaceStores = await getLocations(requestId, storeEnv, 'spc')
     jdnaStoreData = new Map([...dtlrStores, ...shoePalaceStores])
   } else {
     // get stores by fascia
-    jdnaStoreData = await getLocations(requestId, store_env, fascia)
+    jdnaStoreData = await getLocations(requestId, storeEnv, fascia)
   }
   logger('get-jdna-stores').debug({
     requestId,
     message: `Got stores`,
     extraInfo: {
       fascia,
-      store_env,
+      storeEnv,
       stores: Array.from(jdnaStoreData.entries()),
     },
   })
   return jdnaStoreData
 }
 
+export const getAdyenStores = async ({
+  requestId,
+  fascia,
+  storeEnv,
+}: {
+  requestId: string
+  fascia: keyof typeof JDNAProperty | 'all'
+  storeEnv: (typeof APP_ENVS)[number]
+}) => {
+  const stores = (await fetchAdyenData({
+    requestId,
+    appEnv: storeEnv,
+    opts: {
+      type: 'stores',
+      merchantIds: fascia === 'all' ? undefined : JDNAProperty[fascia],
+    },
+  })) as AdyenStore[]
+  return stores
+}
+
 export const processStores = async ({
   requestId,
   jdnaStores,
+  adyenStores,
 }: {
   requestId: string
   jdnaStores: Awaited<ReturnType<typeof getJDNAStores>>
+  adyenStores: AdyenStore[]
 }) => {
   logger('process-jdna-stores').info({
     requestId,
@@ -73,16 +98,23 @@ export const processStores = async ({
       shortName: store.location_short_name,
       region: store.region,
       status: store.active_flag,
+      adyenMerchantId: adyenStores.find((adyenStore) => adyenStore.reference === storeId)
+        ?.merchantId,
+      adyenId: adyenStores.find((adyenStore) => adyenStore.reference === storeId)?.id,
+      adyenReference: adyenStores.find((adyenStore) => adyenStore.reference === storeId)?.reference,
+      adyenStatus: adyenStores.find((adyenStore) => adyenStore.reference === storeId)?.status,
+      adyenDescription: adyenStores.find((adyenStore) => adyenStore.reference === storeId)
+        ?.description,
     })
   }
 
   // Add other common store processing here
 
   // Commit to the database
-  for (const banner of JDNAProperty) {
+  for (const banner of Object.keys(JDNAProperty)) {
     const tmp = items.filter((item) => item.banner === banner.toUpperCase())
     if (tmp.length === 0) {
-      logger('process-jdna-stores').info({
+      logger('process-jdna-stores').debug({
         requestId,
         message: `No stores found for ${banner}`,
       })
@@ -91,7 +123,7 @@ export const processStores = async ({
     const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
     if (connString) {
       const db = drizzle(connString, { schema: neonSchema })
-      const tx = await db.transaction(async (tx) => {
+      await db.transaction(async (tx) => {
         for (const item of tmp) {
           await tx
             .insert(neonSchema.stores)

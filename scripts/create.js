@@ -12,7 +12,9 @@ if (!process.env.NEON_API_KEY) {
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const BANNERS = JSON.parse(readFileSync(join(__dirname, '../src/property.json'), 'utf8'))
+const BANNERS = Object.keys(
+  JSON.parse(readFileSync(join(__dirname, '../src/property.json'), 'utf8')),
+)
 const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'))
 const op = OnePasswordConnect({
   serverURL: 'https://opconnect.az.dtlr.io',

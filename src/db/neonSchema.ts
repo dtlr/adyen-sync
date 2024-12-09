@@ -44,22 +44,33 @@ export type InsertInternalStore = z.infer<typeof InsertStoreSchema>
 export const terminals = pgTable('terminals', {
   id: varchar('id', { length: 255 }).$defaultFn(createId).primaryKey(),
   companyId: varchar('company_id', { length: 255 }).notNull(),
-  merchantId: varchar('merchant_id', { length: 255 }).notNull(),
-  adyenStoreId: varchar('adyen_store_id', { length: 255 }).notNull(),
-  storeId: varchar('store_id', { length: 255 }).notNull(),
-  name: varchar('name', { length: 255 }),
-  model: varchar('model', { length: 255 }),
-  serialNumber: varchar('serial_number', { length: 255 }),
+  merchantId: varchar('merchant_id', { length: 255 }),
+  adyenStoreId: varchar('adyen_store_id', { length: 255 }),
+  storeId: varchar('store_id', { length: 255 }),
+  name: varchar('name', { length: 255 }).notNull(),
+  model: varchar('model', { length: 255 }).notNull(),
+  status: varchar('status', { length: 255 }).notNull(),
+  serialNumber: varchar('serial_number', { length: 255 }).notNull().unique(),
   firmwareVersion: varchar('firmware_version', { length: 255 }),
   cellularIccid: varchar('cellular_iccid', { length: 255 }),
+  cellularStatus: varchar('cellular_status', { length: 255 }),
   wifiIpAddress: varchar('wifi_ip_address', { length: 255 }),
   wifiMacAddress: varchar('wifi_mac_address', { length: 255 }),
+  ethernetMacAddress: varchar('ethernet_mac_address', { length: 255 }),
+  ethernetIpAddress: varchar('ethernet_ip_address', { length: 255 }),
+  ethernetLinkNegotiation: varchar('ethernet_link_negotiation', { length: 255 }),
+  bluetoothMacAddress: varchar('bluetooth_mac_address', { length: 255 }),
+  bluetoothIpAddress: varchar('bluetooth_ip_address', { length: 255 }),
+  lastActivityAt: varchar('last_activity_at', { length: 255 }),
+  lastTransactionAt: varchar('last_transaction_at', { length: 255 }),
+  restartLocalTime: varchar('restart_local_time', { length: 255 }),
   ...commonTime,
 })
 
 export const SelectTerminalSchema = createSelectSchema(terminals)
 export const InsertTerminalSchema = createInsertSchema(terminals)
-export type InternalTerminal = z.infer<typeof SelectTerminalSchema>
+export type SelectInternalTerminal = z.infer<typeof SelectTerminalSchema>
+export type InsertInternalTerminal = z.infer<typeof InsertTerminalSchema>
 
 export const storeRelations = relations(stores, ({ many }) => ({
   terminals: many(terminals),

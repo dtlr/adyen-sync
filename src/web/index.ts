@@ -56,7 +56,12 @@ app.post('/callback/adyen', async (c) => {
 })
 
 app.get('/fleet', async (c) => {
-  const jmData = await processTerminals({ requestId: c.get('requestId') })
+  const jmData = await processTerminals({
+    requestId: c.get('requestId'),
+    fascia: 'dtlr',
+    storeEnv: 'test',
+    adyenTerminals: [],
+  })
   return c.json(
     {
       requestId: c.get('requestId'),

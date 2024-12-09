@@ -1,1 +1,4 @@
-["dtlr", "spc"]
+{
+  "dtlr": "DTLR_InStore",
+  "spc": "SPC_Instore"
+}
