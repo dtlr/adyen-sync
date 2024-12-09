@@ -115,8 +115,30 @@ resource "kubernetes_manifest" "argo_app" {
               {
                 patch = <<-EOT
                 - op: replace
-                  path: /spec/data/0/property
+                  path: /spec/data/0/remoteRef/property
                   value: ${terraform.workspace == "main" ? "credential" : "credential-test"}
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/data/8/remoteRef/key
+                  value: ${terraform.workspace == "main" ? "${local.app_name}-dtlr-live" : "${local.app_name}-dtlr-test"}
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/data/9/remoteRef/key
+                  value: ${terraform.workspace == "main" ? "${local.app_name}-spc-live" : "${local.app_name}-spc-test"}
                 EOT
                 target = {
                   kind = "ExternalSecret"
