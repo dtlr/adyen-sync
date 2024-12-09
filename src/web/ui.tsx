@@ -8,12 +8,23 @@ interface SiteData {
 
 const Layout = (props: SiteData) =>
   html`<!doctype html>
-    <html>
+    <html lang="en" data-theme="dark">
       <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="JDNA Sync" />
+        <meta name="author" content="DTLR" />
+        <meta name="keywords" content="JDNA, Sync, Terminals, Stores" />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="color-scheme" content="light dark" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+        />
         <title>${props.title}</title>
       </head>
       <body>
-        ${props.children}
+        <main class="container">${props.children}</main>
       </body>
     </html>`
 

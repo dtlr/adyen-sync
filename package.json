@@ -87,6 +87,10 @@
     },
     "plugins": [
       "@oclif/plugin-*"
-    ]
+    ],
+    "macos": {
+      "identifier": "com.dtlr.jdna-sync",
+      "sign": "\"DTLR HOLDING, INC (8M565SWY3Y)\""
+    }
   }
 }

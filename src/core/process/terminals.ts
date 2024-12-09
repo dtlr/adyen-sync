@@ -39,6 +39,14 @@ export const getJMTerminals = async ({
   fascia: keyof typeof JDNAProperty | 'all'
   storeEnv: (typeof APP_ENVS)[number]
 }): Promise<AdyenTerminal[]> => {
+  logger('get-jm-terminals').debug({
+    requestId,
+    message: `Syncing terminals for fascia: ${fascia}`,
+    extraInfo: {
+      fascia,
+      storeEnv,
+    },
+  })
   return []
 }
 
@@ -53,7 +61,15 @@ export const processTerminals = async ({
   fascia: keyof typeof JDNAProperty | 'all'
   storeEnv: (typeof APP_ENVS)[number]
 }): Promise<string[]> => {
-  logger('process-terminals').info({ requestId, message: 'Processing terminals' })
+  logger('process-terminals').debug({
+    requestId,
+    message: 'Processing terminals',
+    extraInfo: {
+      adyenTerminals,
+      fascia,
+      storeEnv,
+    },
+  })
   const items: neonSchema.InsertInternalTerminal[] = []
   const terminalIds: string[] = []
 
@@ -147,6 +163,14 @@ export const updateJMDatabase = async ({
   data: [string, string, string][]
   appEnv: (typeof APP_ENVS)[number]
 }) => {
+  logger('update-jm-database').debug({
+    requestId,
+    message: 'Updating JM database',
+    extraInfo: {
+      data,
+      appEnv,
+    },
+  })
   const envInitial = (appEnv?.toLowerCase() ?? 'test').charAt(0).toLowerCase()
-  let logItem: any
+  let logItem: unknown
 }
