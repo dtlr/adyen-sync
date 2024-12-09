@@ -83,7 +83,7 @@ resource "kubernetes_manifest" "argo_app" {
               "tags.datadoghq.com/${local.app_name}.env"     = terraform.workspace == "main" ? "live" : "test"
               "tags.datadoghq.com/${local.app_name}.service" = local.app_name
             }
-            namespace = data.terraform_remote_state.app_0.outputs.argo_details.namespace
+            namespace = "${data.terraform_remote_state.app_0.outputs.argo_details.namespace}-${terraform.workspace == "main" ? "live" : "test"}"
             images = [
               "${var.image_registry}/${local.app_name}:${var.image_tags[terraform.workspace]}"
             ]
