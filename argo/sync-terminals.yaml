@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: jdna-sync-terminals
+spec:
+  schedule: "0 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: jdna-sync-job
+            tags.datadoghq.com/jdna-sync-terminals.env: qa
+            tags.datadoghq.com/jdna-sync-job.service: jdna-sync-terminals
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: jdna-sync-terminals
+              image: ghcr.io/dtlr/jdna-sync:edge
+              imagePullPolicy: Always
+              command: ["./app/bin/run.js"]
+              args: ["sync", "terminals"]
+              env:
+                - name: DD_ENV
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.labels['tags.datadoghq.com/jdna-sync-terminals.env']
+                - name: DD_SERVICE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.labels['tags.datadoghq.com/jdna-sync-terminalsservice']
+                - name: APP_ENV
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.labels['env']
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: jdna-sync-secrets
+                      key: DB_USER
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: jdna-sync-secrets
+                      key: DB_PASSWORD
+                - name: DB_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: jdna-sync-secrets
+                      key: DB_HOST
+                - name: DB_PORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: jdna-sync-secrets
+                      key: DB_PORT
+                - name: ADYEN_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: jdna-sync-secrets
+                      key: ADYEN_KEY
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m

@@ -7,9 +7,8 @@ on:
         required: false
 
 env:
-  JMC_REGISTRY: us-east5-docker.pkg.dev
   JDNA_REGISTRY: ghcr.io/dtlr
-  IMAGE_NAME: jmc-jdna
+  IMAGE_NAME: jdna-sync
 
 jobs:
   generate-and-apply-manifests:

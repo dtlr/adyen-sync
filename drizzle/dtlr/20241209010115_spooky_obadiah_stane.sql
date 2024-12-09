@@ -1,0 +1,1 @@
+ALTER TABLE "terminals" ADD CONSTRAINT "terminals_serial_number_unique" UNIQUE("serial_number");

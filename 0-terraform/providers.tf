@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket = "tf-remote-state"
-    key    = "tf-adyen-sync.tfstate"
+    key    = "tf-jdna-sync.tfstate"
     region = "auto"
     endpoints = {
       s3 = "https://316c0ba9429f31c14edaf70a48220769.r2.cloudflarestorage.com"
@@ -42,9 +42,14 @@ variable "image_registry" {
   default = "ghcr.io/dtlr"
 }
 
+variable "namespace" {
+  type    = string
+  default = null
+}
+
 variable "image_name" {
   type    = string
-  default = "adyen-sync"
+  default = "jdna-sync"
 }
 
 variable "image_tags" {

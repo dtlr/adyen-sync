@@ -1,12 +1,14 @@
 {
-  "name": "adyen-sync",
+  "name": "jdna-sync",
+  "description": "Sync JDNA data to the database and other services",
   "type": "module",
   "version": "0.0.1",
+  "main": "dist/index.js",
   "author": "Nigel Williams-Lucas <nwilliams-lucas@dtlr.com>",
   "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "dev": "tsx watch src/index.ts",
-    "clean": "rm -rf node_modules .cache dist",
+    "build": "shx rm -rf dist node_modules/.cache && tsc --project tsconfig.json",
+    "dev": "./bin/dev.js",
+    "clean": "shx rm -rf node_modules .cache dist",
     "cf:dev": "npm run dev && npx cloudflared tunnel --url http://localhost:3000",
     "neon:create": "node scripts/create.js",
     "neon:generate": "node scripts/generate.js",
@@ -14,36 +16,74 @@
     "prettier": "prettier --write .",
     "test": "vitest"
   },
+  "files": [
+    "/dist",
+    "/bin",
+    "/drizzle"
+  ],
+  "keywords": [
+    "jdna",
+    "sync",
+    "cli"
+  ],
   "dependencies": {
-    "@hono/node-server": "^1.13.7",
-    "@neondatabase/api-client": "^1.10.3",
-    "axios": "^1.7.7",
-    "commander": "^12.1.0",
-    "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.36.1",
+    "@1password/connect": "^1",
+    "@hono/node-server": "^1",
+    "@neondatabase/api-client": "^1",
+    "@neondatabase/serverless": "^0",
+    "@oclif/core": "^4",
+    "@oclif/plugin-help": "^6",
+    "@oclif/plugin-not-found": "^3",
+    "@oclif/plugin-version": "^2",
+    "@paralleldrive/cuid2": "^2",
+    "axios": "^1",
+    "dotenv": "^16",
+    "drizzle-orm": "^0.37",
+    "drizzle-zod": "^0.5.1",
     "hono": "^4.6.9",
-    "pg": "^8.11.5",
-    "winston": "^3.17.0",
-    "zod": "^3.23.8"
+    "libsodium-wrappers": "^0.7.15",
+    "pg": "^8",
+    "winston": "^3",
+    "zod": "^3"
   },
   "devDependencies": {
     "@eslint/plugin-kit": ">= 0.2.3",
-    "@nwlnexus/config": "^1.2.0",
-    "@types/node": "^20.17.6",
-    "@types/pg": "^8.11.10",
-    "@vitest/coverage-v8": "^2.1.4",
-    "drizzle-kit": "^0.28.0",
-    "eslint": "^9.14.0",
-    "msw": "^2.6.4",
-    "prettier": "^3.3.3",
-    "tsx": "^4.7.1",
-    "typescript": "^5.6.3",
-    "vite-tsconfig-paths": "^5.1.2",
-    "vitest": "^2.1.5"
+    "@nwlnexus/config": "^1",
+    "@types/node": "^20",
+    "@types/pg": "^8",
+    "@vitest/coverage-v8": "^2",
+    "drizzle-kit": "^0.29",
+    "eslint": "^9",
+    "msw": "^2",
+    "prettier": "^3",
+    "shx": "^0.3",
+    "ts-node": "^10.9.2",
+    "tsx": "^4",
+    "typescript": "^5",
+    "vite-tsconfig-paths": "^5",
+    "vitest": "^2"
   },
   "overrides": {
-    "eslint": "^9.14.0",
-    "vitest": "^2.1.5"
+    "eslint": "^9",
+    "vitest": "^2"
   },
-  "prettier": "@nwlnexus/config/prettier"
+  "prettier": "@nwlnexus/config/prettier",
+  "bin": {
+    "jdna-sync": "./bin/run.js"
+  },
+  "oclif": {
+    "bin": "jdna-sync",
+    "commands": "./dist/commands",
+    "dirname": "jdna-sync",
+    "topicSeparator": " ",
+    "hooks": {
+      "init": [
+        "./dist/hooks/init/env-checks"
+      ],
+      "migration": "./dist/hooks/migration"
+    },
+    "plugins": [
+      "@oclif/plugin-*"
+    ]
+  }
 }

@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1733694217583,
+      "tag": "20241208214337_powerful_bug",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1733694518185,
+      "tag": "20241208214838_material_wasp",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1733700797712,
+      "tag": "20241208233317_smooth_the_executioner",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1733704038654,
+      "tag": "20241209002718_slimy_harpoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1733705238262,
+      "tag": "20241209004718_vengeful_thor",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1733706037525,
+      "tag": "20241209010037_flashy_leader",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1733706075310,
+      "tag": "20241209010115_spooky_obadiah_stane",
+      "breakpoints": true
+    }
+  ]
+}
