@@ -21,7 +21,7 @@ spec:
             - name: jdna-sync-stores
               image: ghcr.io/dtlr/jdna-sync:edge
               imagePullPolicy: Always
-              command: ["./app/bin/run.js"]
+              command: ["/app/bin/run.js"]
               args: ["sync", "stores"]
               env:
                 - name: DD_ENV

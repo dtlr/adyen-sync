@@ -16,6 +16,10 @@ export class ServeCommand extends BaseCommand<typeof ServeCommand> {
   }
 
   async run(): Promise<void> {
+    await this.config.runHook('migration', {
+      requestId: 'serve-command',
+      id: 'serve-command',
+    })
     const { flags } = await this.parse(ServeCommand)
 
     const port = flags.port
