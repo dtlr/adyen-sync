@@ -62,10 +62,11 @@ data "kubernetes_all_namespaces" "allns" {
 }
 
 locals {
-  app_namespace = "adyen-sync"
+  app_namespace = var.namespace != null ? var.namespace : var.image_name
+  gh_domain     = replace(var.image_registry, "ghcr.io", "github.com")
 }
 
-resource "kubernetes_namespace" "jdna_sync" {
+resource "kubernetes_namespace" "ns" {
   metadata {
     name = local.app_namespace
   }
@@ -75,22 +76,22 @@ resource "kubernetes_namespace" "jdna_sync" {
   }
 }
 
-resource "kubernetes_manifest" "jdna_sync_prj" {
+resource "kubernetes_manifest" "argo_prj" {
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "AppProject"
     metadata = {
-      name      = "jdna-sync"
+      name      = var.image_name
       namespace = "argocd"
     }
     spec = {
-      description = "JDNA Sync"
+      description = var.image_name
       sourceNamespaces = [
         local.app_namespace,
       ]
       sourceRepos = [
         "https://github.com/dtlr/argo-manifest-monorepo.git",
-        "https://github.com/dtlr/jdna-sync.git"
+        "https://${local.gh_domain}/${var.image_name}.git"
       ]
       clusterResourceWhitelist = [
         {
@@ -118,9 +119,9 @@ resource "kubernetes_manifest" "jdna_sync_prj" {
   }
 }
 
-resource "kubernetes_secret" "jdna_sync_repo" {
+resource "kubernetes_secret" "repo" {
   metadata {
-    name      = "jdna-sync-repo"
+    name      = "${var.image_name}-repo"
     namespace = local.app_namespace
     labels = {
       "argocd.argoproj.io/secret-type" = "repository"
@@ -128,7 +129,7 @@ resource "kubernetes_secret" "jdna_sync_repo" {
   }
   data = {
     type                    = "git"
-    url                     = "https://github.com/dtlr/jdna-sync.git"
+    url                     = "https://${local.gh_domain}/${var.image_name}.git"
     githubAppID             = data.onepassword_item.gh_app.section.0.field.1.value
     githubAppInstallationID = data.onepassword_item.gh_app.section.0.field.2.value
     githubAppPrivateKey     = <<-PRVKEY
@@ -143,8 +144,9 @@ output "namespace" {
 
 output "argo_details" {
   value = {
-    project_name = kubernetes_manifest.jdna_sync_prj.manifest.metadata.name
+    project_name = kubernetes_manifest.argo_prj.manifest.metadata.name
     destination  = nonsensitive(data.terraform_remote_state.azure_0.outputs.aks_details.name)
     namespace    = local.app_namespace
+    repo_url     = "https://${local.gh_domain}/${var.image_name}.git"
   }
 }

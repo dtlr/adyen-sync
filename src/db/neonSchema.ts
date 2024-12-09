@@ -1,5 +1,5 @@
 import { init } from '@paralleldrive/cuid2'
-import { pgTable, uuid, varchar, real, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, varchar, real, boolean } from 'drizzle-orm/pg-core'
 import { commonTime } from './common'
 import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
 import { z } from 'zod'
@@ -36,6 +36,22 @@ export const stores = pgTable('stores', {
   ...commonTime,
 })
 
+// index('idx_code')
+//   .on(stores.code)
+//   .concurrently()
+//   .where(sql``)
+//   .with({ fillfactor: 100 })
+// index('idx_district')
+//   .on(stores.district)
+//   .concurrently()
+//   .where(sql``)
+//   .with({ fillfactor: 100 })
+// index('idx_region')
+//   .on(stores.region)
+//   .concurrently()
+//   .where(sql``)
+//   .with({ fillfactor: 100 })
+
 export const SelectStoreSchema = createSelectSchema(stores)
 export const InsertStoreSchema = createInsertSchema(stores)
 export type SelectInternalStore = z.infer<typeof SelectStoreSchema>
@@ -66,6 +82,37 @@ export const terminals = pgTable('terminals', {
   restartLocalTime: varchar('restart_local_time', { length: 255 }),
   ...commonTime,
 })
+
+// index('idx_serial_number')
+//   .on(terminals.serialNumber)
+//   .concurrently()
+//   .where(sql``)
+//   .with({ fillfactor: 100 })
+// index('idx_adyen_store_id')
+//   .on(terminals.adyenStoreId)
+//   .concurrently()
+//   .where(sql``)
+//   .with({ fillfactor: 100 })
+// index('idx_store_id')
+//   .on(terminals.storeId)
+//   .concurrently()
+//   .where(sql``)
+//   .with({ fillfactor: 100 })
+// index('idx_status')
+//   .on(terminals.status)
+//   .concurrently()
+//   .where(sql``)
+//   .with({ fillfactor: 100 })
+// index('idx_model')
+//   .on(terminals.model)
+//   .concurrently()
+//   .where(sql``)
+//   .with({ fillfactor: 100 })
+// index('idx_firmware_version')
+//   .on(terminals.firmwareVersion)
+//   .concurrently()
+//   .where(sql``)
+//   .with({ fillfactor: 100 })
 
 export const SelectTerminalSchema = createSelectSchema(terminals)
 export const InsertTerminalSchema = createInsertSchema(terminals)

@@ -2,7 +2,6 @@ import { fetchAdyenData } from '@eapis/adyen.js'
 import { AdyenTerminal } from 'types/adyen.js'
 import { logger, parseStoreRef } from '../utils.js'
 import { APP_ENVS, JDNAProperty } from '@/constants.js'
-import { InsertInternalTerminal, stores } from '@/db/neonSchema.js'
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/neon-serverless'
 import * as neonSchema from '@/db/neonSchema.js'
@@ -43,7 +42,7 @@ export const processTerminals = async ({
   storeEnv: (typeof APP_ENVS)[number]
 }): Promise<string[]> => {
   logger('process-terminals').info({ requestId, message: 'Processing terminals' })
-  const items: InsertInternalTerminal[] = []
+  const items: neonSchema.InsertInternalTerminal[] = []
   const terminalIds: string[] = []
 
   for (const terminal of adyenTerminals) {
@@ -72,6 +71,26 @@ export const processTerminals = async ({
   }
 
   for (const banner of Object.keys(JDNAProperty)) {
+    logger('process-terminals').debug({
+      requestId,
+      message: `Processing terminals for ${banner}`,
+      extraInfo: {
+        banner,
+        items,
+      },
+    })
+    const tmp = items.filter((item) => item.merchantId === JDNAProperty[banner])
+    if (tmp.length === 0) {
+      logger('process-terminals').debug({
+        requestId,
+        message: `No terminals found for ${banner}`,
+        extraInfo: {
+          banner,
+          merchantId: JDNAProperty[banner],
+        },
+      })
+      continue
+    }
     const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
     if (!connString) {
       logger('process-terminals').error({
@@ -82,7 +101,7 @@ export const processTerminals = async ({
     }
     const db = drizzle(connString, { schema: neonSchema })
     await db.transaction(async (tx) => {
-      for (const item of items) {
+      for (const item of tmp) {
         let storeId: string | undefined
         if (item.adyenStoreId) {
           const result = await tx
@@ -100,7 +119,7 @@ export const processTerminals = async ({
             target: [neonSchema.terminals.serialNumber],
             set: { ...item, storeId },
           })
-        terminalIds.push(...items.map((item) => item.id).filter((id) => id !== undefined))
+        terminalIds.push(...tmp.map((item) => item.id).filter((id) => id !== undefined))
       }
     })
   }

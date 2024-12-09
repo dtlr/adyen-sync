@@ -15,7 +15,7 @@ data "terraform_remote_state" "do" {
   }
 }
 
-data "terraform_remote_state" "jdna_sync_0" {
+data "terraform_remote_state" "app_0" {
   backend = "s3"
   config = {
     bucket = "tf-remote-state"
@@ -54,36 +54,36 @@ provider "kubernetes" {
 }
 
 locals {
-  app_name = "adyen-sync"
+  app_name = var.app_name != null ? var.app_name : "jdna-sync"
 }
 
-resource "kubernetes_manifest" "argo_application" {
+resource "kubernetes_manifest" "argo_app" {
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "Application"
     metadata = {
       labels = {
-        app = "${local.app_name}-${terraform.workspace == "main" ? "prod" : terraform.workspace}"
-        env = terraform.workspace == "main" ? "prod" : terraform.workspace
+        app = "${local.app_name}-${terraform.workspace == "main" ? "live" : "test"}"
+        env = terraform.workspace == "main" ? "live" : "test"
       }
-      name      = "${local.app_name}-${terraform.workspace == "main" ? "prod" : terraform.workspace}"
-      namespace = data.terraform_remote_state.adyen_sync_0.outputs.namespace
+      name      = "${local.app_name}-${terraform.workspace == "main" ? "live" : "test"}"
+      namespace = data.terraform_remote_state.app_0.outputs.namespace
     }
     spec = {
       destination = {
-        name      = data.terraform_remote_state.adyen_sync_0.outputs.argo_details.destination
-        namespace = "${data.terraform_remote_state.adyen_sync_0.outputs.argo_details.namespace}-${terraform.workspace == "main" ? "prod" : terraform.workspace}"
+        name      = data.terraform_remote_state.app_0.outputs.argo_details.destination
+        namespace = "${data.terraform_remote_state.app_0.outputs.argo_details.namespace}-${terraform.workspace == "main" ? "live" : "test"}"
       }
-      project = data.terraform_remote_state.adyen_sync_0.outputs.argo_details.project_name
+      project = data.terraform_remote_state.app_0.outputs.argo_details.project_name
       sources = [
         {
           kustomize = {
             commonLabels = {
-              env                                            = terraform.workspace == "main" ? "prod" : terraform.workspace
-              "tags.datadoghq.com/${local.app_name}.env"     = terraform.workspace == "main" ? "prod" : terraform.workspace
+              env                                            = terraform.workspace == "main" ? "live" : "test"
+              "tags.datadoghq.com/${local.app_name}.env"     = terraform.workspace == "main" ? "live" : "test"
               "tags.datadoghq.com/${local.app_name}.service" = local.app_name
             }
-            namespace = data.terraform_remote_state.adyen_sync_0.outputs.argo_details.namespace
+            namespace = data.terraform_remote_state.app_0.outputs.argo_details.namespace
             images = [
               "${var.image_registry}/${local.app_name}:${var.image_tags[terraform.workspace]}"
             ]
@@ -91,8 +91,56 @@ resource "kubernetes_manifest" "argo_application" {
               {
                 patch = <<-EOT
                 - op: replace
+                  path: /metadata/name
+                  value: ${local.app_name}
+                
+                EOT
+                target = {
+                  kind = "Service"
+                  name = "svc"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/selector/app
+                  value: ${local.app_name}
+                
+                EOT
+                target = {
+                  kind = "Service"
+                  name = "svc"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
                   path: /spec/data/0/remoteRef/property
-                  value: ${terraform.workspace == "qa" ? "credential-test" : "credential"}
+                  value: ${terraform.workspace == "prod" ? "credential" : "credential-test"}
+                
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/data/5/remoteRef/key
+                  value: ${terraform.workspace == "prod" ? "${local.app_name}-dtlr-live" : "${local.app_name}-dtlr-test"}
+                
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/data/6/remoteRef/key
+                  value: ${terraform.workspace == "prod" ? "${local.app_name}-spc-live" : "${local.app_name}-spc-test"}
                 
                 EOT
                 target = {
@@ -118,7 +166,7 @@ resource "kubernetes_manifest" "argo_application" {
                 patch = <<-EOT
                 - op: add
                   path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
-                  value: "jdna-sync${terraform.workspace == "qa" ? "-test" : ""}.jdna.io"
+                  value: "${local.app_name}${terraform.workspace == "prod" ? "" : "-test"}.jdna.io"
                 
                 EOT
                 target = {
@@ -130,7 +178,7 @@ resource "kubernetes_manifest" "argo_application" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/rules/0/host
-                  value: "jdna-sync${terraform.workspace == "qa" ? "-test" : ""}.jdna.io"
+                  value: "${local.app_name}${terraform.workspace == "prod" ? "" : "-test"}.jdna.io"
                 
                 EOT
                 target = {
@@ -142,7 +190,7 @@ resource "kubernetes_manifest" "argo_application" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/tls/0/hosts/0
-                  value: "jdna-sync${terraform.workspace == "qa" ? "-test" : ""}.jdna.io"
+                  value: "${local.app_name}${terraform.workspace == "prod" ? "" : "-test"}.jdna.io"
                 
                 EOT
                 target = {
@@ -154,7 +202,7 @@ resource "kubernetes_manifest" "argo_application" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/tls/0/secretName
-                  value: "jdna-sync-tls"
+                  value: "${local.app_name}-tls"
                 
                 EOT
                 target = {
@@ -165,7 +213,7 @@ resource "kubernetes_manifest" "argo_application" {
             ]
           }
           path           = "argo"
-          repoURL        = "https://github.com/dtlr/jdna-sync.git"
+          repoURL        = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
           targetRevision = "HEAD"
         },
       ]

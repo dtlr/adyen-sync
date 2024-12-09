@@ -42,6 +42,11 @@ variable "image_registry" {
   default = "ghcr.io/dtlr"
 }
 
+variable "namespace" {
+  type    = string
+  default = null
+}
+
 variable "image_name" {
   type    = string
   default = "jdna-sync"

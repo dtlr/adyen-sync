@@ -31,7 +31,7 @@ spec:
                 - name: DD_SERVICE
                   valueFrom:
                     fieldRef:
-                      fieldPath: metadata.labels['tags.datadoghq.com/jdna-sync-job.service']
+                      fieldPath: metadata.labels['tags.datadoghq.com/jdna-sync-terminalsservice']
                 - name: APP_ENV
                   valueFrom:
                     fieldRef:

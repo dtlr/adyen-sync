@@ -30,34 +30,56 @@ spec:
                   fieldPath: metadata.labels['tags.datadoghq.com/jdna-sync.service']
             - name: APP_PORT
               value: "3000"
+            - name: LOG_LEVEL
+              value: "debug"
             - name: APP_ENV
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.labels['env']
+            - name: DTLR_DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DTLR_DATABASE_URI
+            - name: SPC_DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: SPC_DATABASE_URI
+            - name: LOCATIONSAPI_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: LOCATIONSAPI_URL
+            - name: LOCATIONSAPI_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: LOCATIONSAPI_CLIENT_ID
+            - name: LOCATIONSAPI_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: LOCATIONSAPI_CLIENT_SECRET
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: jdna-sync-secrets
+                  name: app-secret
                   key: DB_USER
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: jdna-sync-secrets
+                  name: app-secret
                   key: DB_PASSWORD
-            - name: DB_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: jdna-sync-secrets
-                  key: DB_HOST
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
-                  name: jdna-sync-secrets
+                  name: app-secret
                   key: DB_PORT
             - name: ADYEN_KEY
               valueFrom:
                 secretKeyRef:
-                  name: jdna-sync-secrets
+                  name: app-secret
                   key: ADYEN_KEY
           resources:
             requests:

@@ -49,3 +49,8 @@ variable "image_tags" {
     qa   = "qa"
   }
 }
+
+variable "app_name" {
+  type    = string
+  default = null
+}
