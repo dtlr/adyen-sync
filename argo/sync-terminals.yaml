@@ -21,7 +21,6 @@ spec:
             - name: jdna-sync-terminals
               image: ghcr.io/dtlr/jdna-sync:edge
               imagePullPolicy: Always
-              command: ["/app/bin/run.js"]
               args: ["sync", "terminals"]
               env:
                 - name: DD_ENV

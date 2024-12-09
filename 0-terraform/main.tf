@@ -90,7 +90,6 @@ resource "kubernetes_manifest" "argo_prj" {
         local.app_namespace,
       ]
       sourceRepos = [
-        "https://github.com/dtlr/argo-manifest-monorepo.git",
         "https://${local.gh_domain}/${var.image_name}.git"
       ]
       clusterResourceWhitelist = [

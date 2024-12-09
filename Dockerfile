@@ -33,4 +33,5 @@ ENV APP_PORT=3000
 
 EXPOSE ${APP_PORT}
 
-CMD ["/app/bin/run.js", "serve"]
+ENTRYPOINT ["/app/bin/run.js"]
+CMD ["serve"]
