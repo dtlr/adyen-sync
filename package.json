@@ -2,7 +2,7 @@
   "name": "jdna-sync",
   "description": "Sync JDNA data to the database and other services",
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "dist/index.js",
   "author": "Nigel Williams-Lucas <nwilliams-lucas@dtlr.com>",
   "scripts": {
