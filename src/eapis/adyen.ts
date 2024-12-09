@@ -1,14 +1,14 @@
 import axios from 'axios'
-import type {
-  AdyenStore,
-  AdyenStoresResponse,
-  AdyenTerminal,
-  AdyenTerminalsResponse,
+import  {
+  type AdyenStore,
+  type AdyenStoresResponse,
+  type AdyenTerminal,
+  type AdyenTerminalsResponse,
 } from 'types/adyen.js'
 
-import { AdyenSyncError } from '@/error.js'
+import { type APP_ENVS } from '@/constants'
 import { logger } from '@/core/utils.js'
-import { APP_ENVS } from '@/constants'
+import { AdyenSyncError } from '@/error.js'
 
 export const fetchAdyenData = async ({
   requestId,
@@ -37,10 +37,10 @@ export const fetchAdyenData = async ({
   try {
     let pagesTotal: number
     let data: (AdyenStore | AdyenTerminal)[] = []
-    let pageSize = opts.pageSize || 100
+    const pageSize = opts.pageSize || 100
     let page = opts.page || 1
 
-    let queryParams: Record<string, string> = {
+    const queryParams: Record<string, string> = {
       pageSize: pageSize.toString(),
       page: page.toString(),
     }

@@ -1,5 +1,5 @@
 import { format } from 'node:util'
-import { Interfaces } from '@oclif/core'
+import { type Interfaces } from '@oclif/core'
 import winston from 'winston'
 
 const cliCustomLevels = {

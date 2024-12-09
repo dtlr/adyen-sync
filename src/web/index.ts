@@ -1,15 +1,14 @@
 import { Hono } from 'hono'
-import { prettyJSON } from 'hono/pretty-json'
 import { cors } from 'hono/cors'
+import { RETAINED_304_HEADERS , etag } from 'hono/etag'
+import { HTTPException } from 'hono/http-exception'
+import { prettyJSON } from 'hono/pretty-json'
 import { requestId } from 'hono/request-id'
 import { secureHeaders } from 'hono/secure-headers'
-import { RETAINED_304_HEADERS } from 'hono/etag'
-import { etag } from 'hono/etag'
-import { HTTPException } from 'hono/http-exception'
-import { AdyenSyncError } from '@/error.js'
-import { webLogger } from '@/core/utils.js'
 import apiV2 from './api-v2.js'
 import ui from './ui.jsx'
+import { webLogger } from '@/core/utils.js'
+import { AdyenSyncError } from '@/error.js'
 export const app = new Hono()
 
 app.use('*', requestId())

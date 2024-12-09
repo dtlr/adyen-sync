@@ -1,4 +1,4 @@
-import { Command, Flags, Interfaces } from '@oclif/core'
+import { Command, Flags, type Interfaces } from '@oclif/core'
 import { APP_ENVS, LOG_LEVELS } from './constants.js'
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<
@@ -44,13 +44,13 @@ export abstract class BaseCommand<T extends typeof Command> extends Command {
     this.args = args as Args<T>
   }
 
-  protected async catch(err: Error & { exitCode?: number }): Promise<any> {
+  protected async catch(err: Error & { exitCode?: number }): Promise<unknown> {
     // add any custom logic to handle errors from the command
     // or simply return the parent class error handling
     return super.catch(err)
   }
 
-  protected async finally(_: Error | undefined): Promise<any> {
+  protected async finally(_: Error | undefined): Promise<unknown> {
     // called after run and catch regardless of whether or not the command errored
     return super.finally(_)
   }

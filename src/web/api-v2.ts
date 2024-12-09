@@ -1,10 +1,10 @@
-import { APP_ENVS, JDNAProperty } from '@/constants'
+import { Hono } from 'hono'
+import { env } from 'hono/adapter'
+import { type APP_ENVS, JDNAProperty } from '@/constants'
 import { getJDNAStores, getAdyenStores, processStores } from '@/core/process/stores'
 import { logger } from '@/core/utils'
 import { AdyenSyncError } from '@/error'
 import { adyenTerminalBoardWebhook } from '@/types/adyen'
-import { Hono } from 'hono'
-import { env } from 'hono/adapter'
 
 const apiV2 = new Hono()
   .get('/readyz', (c) => {

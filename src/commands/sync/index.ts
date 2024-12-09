@@ -1,4 +1,3 @@
-import { logger } from '@/core/utils.js'
 import { SyncBaseCommand } from '@/sync-base-command.js'
 
 export class SyncCommand extends SyncBaseCommand<typeof SyncCommand> {
@@ -13,7 +12,5 @@ export class SyncCommand extends SyncBaseCommand<typeof SyncCommand> {
   //   }),
   // }
 
-  async run(): Promise<void> {
-    const { flags } = await this.parse(SyncCommand)
-  }
+  async run(): Promise<void> {}
 }

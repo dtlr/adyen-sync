@@ -3,7 +3,7 @@ import { html } from 'hono/html'
 
 interface SiteData {
   title: string
-  children?: any
+  children?: unknown
 }
 
 const Layout = (props: SiteData) =>

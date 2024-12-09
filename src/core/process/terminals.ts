@@ -1,9 +1,9 @@
 import { fetchAdyenData } from '@eapis/adyen.js'
-import { AdyenTerminal } from 'types/adyen.js'
-import { logger, parseStoreRef } from '../utils.js'
-import { APP_ENVS, JDNAProperty } from '@/constants.js'
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/neon-serverless'
+import { type AdyenTerminal } from 'types/adyen.js'
+import { logger } from '../utils.js'
+import { type APP_ENVS, JDNAProperty } from '@/constants.js'
 import * as neonSchema from '@/db/neonSchema.js'
 
 export const getAdyenTerminals = async ({
@@ -28,6 +28,18 @@ export const getAdyenTerminals = async ({
     appEnv: storeEnv,
   })) as AdyenTerminal[]
   return terminals
+}
+
+export const getJMTerminals = async ({
+  requestId,
+  fascia,
+  storeEnv,
+}: {
+  requestId: string
+  fascia: keyof typeof JDNAProperty | 'all'
+  storeEnv: (typeof APP_ENVS)[number]
+}): Promise<AdyenTerminal[]> => {
+  return []
 }
 
 export const processTerminals = async ({
@@ -124,4 +136,17 @@ export const processTerminals = async ({
     })
   }
   return terminalIds
+}
+
+export const updateJMDatabase = async ({
+  requestId,
+  data,
+  appEnv,
+}: {
+  requestId: string
+  data: [string, string, string][]
+  appEnv: (typeof APP_ENVS)[number]
+}) => {
+  const envInitial = (appEnv?.toLowerCase() ?? 'test').charAt(0).toLowerCase()
+  let logItem: any
 }

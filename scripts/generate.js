@@ -1,11 +1,11 @@
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
-import { createApiClient } from '@neondatabase/api-client'
 import { execSync } from 'child_process'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
+import { createApiClient } from '@neondatabase/api-client'
 
 import { drizzleConfig } from '../templates/drizzle-config.js'
-import { githubWorkflow } from '../templates/github-workflow.js'
+// import { githubWorkflow } from '../templates/github-workflow.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)

@@ -1,7 +1,7 @@
-import { Hook } from '@oclif/core'
+import { type Hook } from '@oclif/core'
+import { logger } from '@/core/utils'
 import { AdyenSyncError } from '@/error.js'
 import 'dotenv/config'
-import { logger } from '@/core/utils'
 
 const checkEnv: Hook<'init'> = async function () {
   const {

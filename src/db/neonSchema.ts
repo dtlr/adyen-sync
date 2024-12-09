@@ -1,9 +1,9 @@
 import { init } from '@paralleldrive/cuid2'
-import { pgTable, varchar, real, boolean } from 'drizzle-orm/pg-core'
-import { commonTime } from './common'
-import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
-import { z } from 'zod'
 import { relations } from 'drizzle-orm'
+import { pgTable, varchar, real, boolean } from 'drizzle-orm/pg-core'
+import { createSelectSchema, createInsertSchema } from 'drizzle-zod'
+import { type z } from 'zod'
+import { commonTime } from './common'
 
 const createId = init({
   length: 44,

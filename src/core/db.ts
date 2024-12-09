@@ -1,5 +1,6 @@
-import { drizzle } from 'drizzle-orm/node-postgres'
+import { logger, findDifference } from '@core/utils.js'
 import { eq } from 'drizzle-orm'
+import { drizzle } from 'drizzle-orm/node-postgres'
 import {
   devDevicePersonalization,
   payAssignedPaymentDevice,
@@ -7,7 +8,6 @@ import {
 } from '../db/schema.js'
 import { POSWRKIDS } from '@/constants.js'
 import { AdyenSyncError } from '@/error.js'
-import { logger, findDifference } from '@core/utils.js'
 
 const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, APP_ENV } = process.env
 
@@ -26,7 +26,7 @@ export const updateJMDatabase = async ({
 }) => {
   const { APP_ENV } = process.env
   const envInitial = (APP_ENV?.toLowerCase() ?? 'dev').charAt(0).toLowerCase()
-  let logItem: any
+  let logItem: unknown
   try {
     let existingWorkstationIds: string[] = []
     for (const item of data) {
@@ -48,7 +48,7 @@ export const updateJMDatabase = async ({
 
       if (dbExistingWorkstations.length > 0)
         existingWorkstationIds = dbExistingWorkstations.map(
-          (workstation) => workstation.deviceId?.split('-')[1]!,
+          (workstation) => workstation.deviceId!.split('-')[1]!,
         )
       logger('db').info({
         message: `Existing workstation ids for ${item}`,
@@ -69,7 +69,7 @@ export const updateJMDatabase = async ({
           requestId,
           item,
         })
-        deviceId = existingDDP[0]?.deviceId!
+        deviceId = existingDDP[0]!.deviceId!
       } else {
         logger('db').info({
           message: `Existing record not found for ${item}`,

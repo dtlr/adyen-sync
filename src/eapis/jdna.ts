@@ -1,8 +1,7 @@
-import type { LocationLocal } from 'types'
-import { localLocationSchema } from 'types'
-import { APP_ENVS, JDNAProperty } from '@/constants.js'
-import { AdyenSyncError } from '@/error'
+import  { type LocationLocal , localLocationSchema } from 'types'
+import { type APP_ENVS, type JDNAProperty } from '@/constants.js'
 import { logger } from '@/core/utils'
+import { AdyenSyncError } from '@/error'
 
 export const getLocations = async (
   requestId: string,

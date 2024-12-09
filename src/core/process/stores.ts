@@ -1,11 +1,11 @@
-import { APP_ENVS, JDNAProperty } from '@/constants.js'
+import * as neonSchema from '@db/neonSchema.js'
+import { drizzle } from 'drizzle-orm/neon-serverless'
+import { type APP_ENVS, JDNAProperty } from '@/constants.js'
 import { logger, parseStoreRef } from '@/core/utils.js'
 import { type InsertInternalStore } from '@/db/neonSchema'
-import { getLocations } from '@/eapis/jdna'
-import { drizzle } from 'drizzle-orm/neon-serverless'
-import * as neonSchema from '@db/neonSchema.js'
 import { fetchAdyenData } from '@/eapis/adyen'
-import { AdyenStore } from '@/types/adyen'
+import { getLocations } from '@/eapis/jdna'
+import { type AdyenStore } from '@/types/adyen'
 
 export const getJDNAStores = async ({
   requestId,

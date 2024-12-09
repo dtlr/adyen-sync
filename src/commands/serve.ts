@@ -1,8 +1,8 @@
 import { logger } from '@core/utils.js'
-import { app } from '@web'
 import { serve } from '@hono/node-server'
-import { BaseCommand } from '@/base-command.js'
 import { Flags } from '@oclif/core'
+import { app } from '@web'
+import { BaseCommand } from '@/base-command.js'
 
 export class ServeCommand extends BaseCommand<typeof ServeCommand> {
   static description = 'Serve the web app'

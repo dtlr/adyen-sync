@@ -1,6 +1,6 @@
+import { init } from '@paralleldrive/cuid2'
 import { config, createLogger as createWinstonLogger, transports, format } from 'winston'
 import { STOREREFPATTERN } from '@/constants.js'
-import { init } from '@paralleldrive/cuid2'
 
 export const createLogger = (context?: string) =>
   createWinstonLogger({

@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import {
   pgTable,
   primaryKey,
@@ -7,7 +8,6 @@ import {
   integer,
   pgSequence,
 } from 'drizzle-orm/pg-core'
-import { sql } from 'drizzle-orm'
 
 export const uptMgmtTargetVersionIdSeq = pgSequence('upt_mgmt_target_version_id_seq', {
   startWith: '1',
