@@ -26,6 +26,7 @@ export const parseStoreRef = (reference: string) => {
   const match = reference.match(STOREREFPATTERN)
   if (!match) return null
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, letters, numbers] = match
   return {
     prefix: letters,

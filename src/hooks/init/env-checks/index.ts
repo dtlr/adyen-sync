@@ -1,6 +1,6 @@
 import { type Hook } from '@oclif/core'
 import { logger } from '@/core/utils'
-import { AdyenSyncError } from '@/error.js'
+import { AppError } from '@/error.js'
 import 'dotenv/config'
 
 const checkEnv: Hook<'init'> = async function () {
@@ -19,7 +19,7 @@ const checkEnv: Hook<'init'> = async function () {
   logger('init-env-checks').debug({ message: 'Checking environment variables' })
 
   if (NODE_ENV !== 'test' && !DATABASE_URL && (!DB_USER || !DB_PASSWORD || !DB_HOST))
-    throw new AdyenSyncError({
+    throw new AppError({
       name: 'DATABASE_CONFIG_MISSING',
       message: 'Database configuration is missing.',
       cause: {
@@ -32,7 +32,7 @@ const checkEnv: Hook<'init'> = async function () {
     })
 
   if (NODE_ENV !== 'test' && !ADYEN_KEY && (!ADYEN_KEY_TEST || !ADYEN_KEY_LIVE))
-    throw new AdyenSyncError({
+    throw new AppError({
       name: 'ADYEN_CONFIG_MISSING',
       message: 'Adyen configuration is missing.',
       cause: {

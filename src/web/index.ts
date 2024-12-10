@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { RETAINED_304_HEADERS , etag } from 'hono/etag'
+import { RETAINED_304_HEADERS, etag } from 'hono/etag'
 import { HTTPException } from 'hono/http-exception'
 import { prettyJSON } from 'hono/pretty-json'
 import { requestId } from 'hono/request-id'
@@ -8,7 +8,7 @@ import { secureHeaders } from 'hono/secure-headers'
 import apiV2 from './api-v2.js'
 import ui from './ui.jsx'
 import { webLogger } from '@/core/utils.js'
-import { AdyenSyncError } from '@/error.js'
+import { AppError } from '@/error.js'
 export const app = new Hono()
 
 app.use('*', requestId())
@@ -29,7 +29,7 @@ app.onError((err, c) => {
   if (err instanceof HTTPException) {
     webLogger.error({ requestId: c.get('requestId'), message: 'Error caught', error: err })
     return c.json({ message: err.message, requestId: c.get('requestId') }, err.status)
-  } else if (err instanceof AdyenSyncError) {
+  } else if (err instanceof AppError) {
     webLogger.error({ requestId: c.get('requestId'), message: 'Error caught', error: err })
     return c.json({ message: err.message, requestId: c.get('requestId') }, 400)
   } else {

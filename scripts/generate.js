@@ -46,14 +46,12 @@ const neonApi = createApiClient({
         mkdirSync(path)
       }
 
-      if (!existsSync(`${path}/${file}`)) {
-        writeFileSync(`${path}/${file}`, drizzleConfig(safeName, envVarName))
-        console.info('Set drizzle config for:', safeName)
-      }
+      writeFileSync(`${path}/${file}`, drizzleConfig(safeName, envVarName))
+      console.info('Set drizzle config for:', safeName)
 
       console.log('Run drizzle-kit generate for :', safeName)
       try {
-        const output = execSync(`drizzle-kit generate --config=${path}/${file}`, {
+        const output = execSync(`npx --yes drizzle-kit generate --config=${path}/${file}`, {
           encoding: 'utf-8',
         })
         if (output.trim()) {

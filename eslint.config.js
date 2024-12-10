@@ -1,4 +1,3 @@
 import eslintConfig from '@nwlnexus/config/eslint'
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [...eslintConfig]
+export default [...eslintConfig, { ignores: ['scripts', 'configs'] }]

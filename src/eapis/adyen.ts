@@ -1,5 +1,5 @@
 import axios from 'axios'
-import  {
+import {
   type AdyenStore,
   type AdyenStoresResponse,
   type AdyenTerminal,
@@ -8,7 +8,7 @@ import  {
 
 import { type APP_ENVS } from '@/constants'
 import { logger } from '@/core/utils.js'
-import { AdyenSyncError } from '@/error.js'
+import { AppError } from '@/error.js'
 
 export const fetchAdyenData = async ({
   requestId,
@@ -91,7 +91,7 @@ export const fetchAdyenData = async ({
     })
     return opts.type === 'stores' ? (data as AdyenStore[]) : (data as AdyenTerminal[])
   } catch (error) {
-    throw new AdyenSyncError({
+    throw new AppError({
       name: 'ADYEN_API',
       message: 'Error in the fetch call to Adyen API',
       cause: error,

@@ -1,5 +1,5 @@
-import 'dotenv/config'
-import { defineConfig } from 'drizzle-kit'
+import 'dotenv/config';
+import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
   out: './drizzle/spc',
@@ -16,5 +16,10 @@ export default defineConfig({
     table: '__drizzle_migrations__',
     schema: 'public',
   },
+  entities: {
+    roles: {
+      provider: 'neon',
+    },
+  },
   schemaFilter: 'public',
-})
+});

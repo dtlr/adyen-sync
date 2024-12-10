@@ -50,6 +50,13 @@
       "when": 1733706074845,
       "tag": "20241209010114_previous_captain_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1733786779127,
+      "tag": "20241209232619_foamy_grandmaster",
+      "breakpoints": true
     }
   ]
 }

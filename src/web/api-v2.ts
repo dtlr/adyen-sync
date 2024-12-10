@@ -3,7 +3,7 @@ import { env } from 'hono/adapter'
 import { type APP_ENVS, JDNAProperty } from '@/constants'
 import { getJDNAStores, getAdyenStores, processStores } from '@/core/process/stores'
 import { logger } from '@/core/utils'
-import { AdyenSyncError } from '@/error'
+import { AppError } from '@/error'
 import { adyenTerminalBoardWebhook } from '@/types/adyen'
 
 const apiV2 = new Hono()
@@ -59,7 +59,7 @@ const apiV2 = new Hono()
     const body = await c.req.json()
     const parsedBody = adyenTerminalBoardWebhook.safeParse(body)
     if (!parsedBody.success) {
-      throw new AdyenSyncError({
+      throw new AppError({
         requestId: c.get('requestId'),
         name: 'ROUTE_ADYEN_WEBBHOOK',
         message: 'Invalid webhook body',

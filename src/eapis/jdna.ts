@@ -1,7 +1,7 @@
-import  { type LocationLocal , localLocationSchema } from 'types'
+import { type LocationLocal, localLocationSchema } from 'types'
 import { type APP_ENVS, type JDNAProperty } from '@/constants.js'
 import { logger } from '@/core/utils'
-import { AdyenSyncError } from '@/error'
+import { AppError } from '@/error'
 
 export const getLocations = async (
   requestId: string,
@@ -21,7 +21,7 @@ export const getLocations = async (
   })
 
   if (!LOCATIONSAPI_URL || !LOCATIONSAPI_CLIENT_ID || !LOCATIONSAPI_CLIENT_SECRET) {
-    throw new AdyenSyncError({
+    throw new AppError({
       name: 'ENV_ERROR',
       message:
         'LOCATIONSAPI_URL, LOCATIONSAPI_CLIENT_ID, and LOCATIONSAPI_CLIENT_SECRET must be set',

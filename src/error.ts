@@ -31,4 +31,4 @@ type ErrorName =
   | 'ADYEN_API'
   | 'ROUTE_FLEET'
   | 'ENV_ERROR'
-export class AdyenSyncError extends ErrorBase<ErrorName> {}
+export class AppError extends ErrorBase<ErrorName> {}
