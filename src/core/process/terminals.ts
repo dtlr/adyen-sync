@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { type AdyenTerminal } from 'types/adyen.js'
 import { findDifference, logger } from '../utils.js'
-import { type APP_ENVS, JDNAProperty, POSWRKIDS } from '@/constants.js'
+import { type APP_ENVS, JDNAProperty, type JDNAPropertyKey, POSWRKIDS } from '@/constants.js'
 import * as jmSchema from '@/db/jmSchema.js'
 import * as neonSchema from '@/db/neonSchema.js'
 import { AppError } from '@/error.js'
@@ -14,7 +14,7 @@ export const getAdyenTerminals = async ({
   storeEnv,
 }: {
   requestId: string
-  fascia: keyof typeof JDNAProperty | 'all'
+  fascia: JDNAPropertyKey | 'all'
   storeEnv: (typeof APP_ENVS)[number]
 }): Promise<AdyenTerminal[]> => {
   logger('get-adyen-terminals').debug({
@@ -38,7 +38,7 @@ export const getJMTerminals = async ({
   storeEnv,
 }: {
   requestId: string
-  fascia: keyof typeof JDNAProperty | 'all'
+  fascia: JDNAPropertyKey | 'all'
   storeEnv: (typeof APP_ENVS)[number]
 }): Promise<AdyenTerminal[]> => {
   logger('get-jm-terminals').debug({
@@ -60,7 +60,7 @@ export const processTerminals = async ({
 }: {
   requestId: string
   adyenTerminals: AdyenTerminal[]
-  fascia: keyof typeof JDNAProperty | 'all'
+  fascia: JDNAPropertyKey | 'all'
   storeEnv: (typeof APP_ENVS)[number]
 }) => {
   logger('process-terminals').debug({

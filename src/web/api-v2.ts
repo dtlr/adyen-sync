@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { env } from 'hono/adapter'
-import { type APP_ENVS, JDNAProperty } from '@/constants'
+import { type APP_ENVS, JDNAProperty, type JDNAPropertyKey } from '@/constants'
 import { getJDNAStores, getAdyenStores, processStores } from '@/core/process/stores'
 import { logger } from '@/core/utils'
 import { AppError } from '@/error'
@@ -29,12 +29,12 @@ const apiV2 = new Hono()
       case 'stores': {
         const jdnaStores = await getJDNAStores({
           requestId,
-          fascia: banner ?? 'all',
+          fascia: banner as JDNAPropertyKey | 'all',
           storeEnv: APP_ENV,
         })
         const adyenStores = await getAdyenStores({
           requestId,
-          fascia: banner ?? 'all',
+          fascia: banner as JDNAPropertyKey | 'all',
           storeEnv: APP_ENV,
         })
         const storeIds = await processStores({

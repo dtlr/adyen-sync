@@ -1,4 +1,4 @@
-import { type JDNAProperty, type APP_ENVS } from '@/constants'
+import { type APP_ENVS, type JDNAPropertyKey } from '@/constants'
 import { getAdyenStores, getJDNAStores, processStores } from '@/core/process/stores'
 import { logger } from '@/core/utils'
 import { SyncBaseCommand } from '@/sync-base-command.js'
@@ -20,12 +20,12 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
     })
     const jdnaStores = await getJDNAStores({
       requestId: flags.requestId,
-      fascia: flags.banner as keyof typeof JDNAProperty | 'all',
+      fascia: flags.banner as JDNAPropertyKey | 'all',
       storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
     })
     const adyenStores = await getAdyenStores({
       requestId: flags.requestId,
-      fascia: flags.banner as keyof typeof JDNAProperty | 'all',
+      fascia: flags.banner as JDNAPropertyKey | 'all',
       storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
     })
 

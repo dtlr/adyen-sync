@@ -31,4 +31,5 @@ type ErrorName =
   | 'ADYEN_API'
   | 'ROUTE_FLEET'
   | 'ENV_ERROR'
+  | 'PROPERTY_FILE_MISSING'
 export class AppError extends ErrorBase<ErrorName> {}

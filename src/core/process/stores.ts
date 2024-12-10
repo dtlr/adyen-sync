@@ -1,6 +1,6 @@
 import * as neonSchema from '@db/neonSchema.js'
 import { drizzle } from 'drizzle-orm/neon-serverless'
-import { type APP_ENVS, JDNAProperty } from '@/constants.js'
+import { type APP_ENVS, JDNAProperty, type JDNAPropertyKey } from '@/constants.js'
 import { logger, parseStoreRef } from '@/core/utils.js'
 import { type InsertInternalStore } from '@/db/neonSchema'
 import { fetchAdyenData } from '@/eapis/adyen'
@@ -13,7 +13,7 @@ export const getJDNAStores = async ({
   storeEnv,
 }: {
   requestId: string
-  fascia: keyof typeof JDNAProperty | 'all'
+  fascia: JDNAPropertyKey | 'all'
   storeEnv: (typeof APP_ENVS)[number]
 }) => {
   logger('get-jdna-stores').debug({
@@ -49,7 +49,7 @@ export const getAdyenStores = async ({
   storeEnv,
 }: {
   requestId: string
-  fascia: keyof typeof JDNAProperty | 'all'
+  fascia: JDNAPropertyKey | 'all'
   storeEnv: (typeof APP_ENVS)[number]
 }) => {
   const stores = (await fetchAdyenData({

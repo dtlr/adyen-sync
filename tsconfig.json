@@ -12,6 +12,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "verbatimModuleSyntax": false,
+    "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmit": false,
@@ -29,6 +30,6 @@
       "@web/*": ["./src/web/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/property.json"],
   "exclude": ["node_modules", "dist", "tests", "scripts", "configs"]
 }
