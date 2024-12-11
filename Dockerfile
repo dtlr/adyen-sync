@@ -26,10 +26,12 @@ COPY --from=builder --chown=jdna:nodejs /app/bin ./bin
 COPY --from=builder --chown=jdna:nodejs /app/dist ./dist
 COPY --from=builder --chown=jdna:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=jdna:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=jdna:nodejs /app/src/property.json ./src/property.json
 
 USER jdna
 ENV APP_PORT=3000
 
 EXPOSE ${APP_PORT}
 
-CMD ["/app/bin/run.js", "serve"]
+ENTRYPOINT ["/app/bin/run.js"]
+CMD ["serve"]

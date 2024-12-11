@@ -83,7 +83,7 @@ resource "kubernetes_manifest" "argo_app" {
               "tags.datadoghq.com/${local.app_name}.env"     = terraform.workspace == "main" ? "live" : "test"
               "tags.datadoghq.com/${local.app_name}.service" = local.app_name
             }
-            namespace = data.terraform_remote_state.app_0.outputs.argo_details.namespace
+            namespace = "${data.terraform_remote_state.app_0.outputs.argo_details.namespace}-${terraform.workspace == "main" ? "live" : "test"}"
             images = [
               "${var.image_registry}/${local.app_name}:${var.image_tags[terraform.workspace]}"
             ]
@@ -114,18 +114,31 @@ resource "kubernetes_manifest" "argo_app" {
               },
               {
                 patch = <<-EOT
-                - op: add
-                  path: /spec/data
-                  value: |
-                    - secretKey: DTLR_DATABASE_URI
-                      remoteRef:
-                        key: ${terraform.workspace == "main" ? "${local.app_name}-dtlr-live" : "${local.app_name}-dtlr-test"}
-                        property: connection_string
-                    - secretKey: SPC_DATABASE_URI
-                      remoteRef:
-                        key: ${terraform.workspace == "main" ? "${local.app_name}-spc-live" : "${local.app_name}-spc-test"}
-                        property: connection_string
-                
+                - op: replace
+                  path: /spec/data/0/remoteRef/property
+                  value: ${terraform.workspace == "main" ? "credential" : "credential-test"}
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/data/8/remoteRef/key
+                  value: ${terraform.workspace == "main" ? "${local.app_name}-dtlr-live" : "${local.app_name}-dtlr-test"}
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/data/9/remoteRef/key
+                  value: ${terraform.workspace == "main" ? "${local.app_name}-spc-live" : "${local.app_name}-spc-test"}
                 EOT
                 target = {
                   kind = "ExternalSecret"
@@ -198,7 +211,7 @@ resource "kubernetes_manifest" "argo_app" {
           }
           path           = "argo"
           repoURL        = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
-          targetRevision = "HEAD"
+          targetRevision = terraform.workspace
         },
       ]
       syncPolicy = {

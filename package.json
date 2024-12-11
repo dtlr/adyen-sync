@@ -2,14 +2,16 @@
   "name": "jdna-sync",
   "description": "Sync JDNA data to the database and other services",
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "dist/index.js",
   "author": "Nigel Williams-Lucas <nwilliams-lucas@dtlr.com>",
   "scripts": {
-    "build": "shx rm -rf dist node_modules/.cache && tsc --project tsconfig.json",
+    "build": "shx rm -rf dist node_modules/.cache && node bin/bundle.js",
     "dev": "./bin/dev.js",
     "clean": "shx rm -rf node_modules .cache dist",
-    "cf:dev": "npm run dev && npx cloudflared tunnel --url http://localhost:3000",
+    "cf:dev": "npm run dev -- serve && npx cloudflared tunnel --url http://localhost:${APP_PORT:-3000}",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "neon:create": "node scripts/create.js",
     "neon:generate": "node scripts/generate.js",
     "neon:migrate": "node scripts/migrate.js",
@@ -47,13 +49,16 @@
     "zod": "^3"
   },
   "devDependencies": {
+    "@eslint/compat": "^1.2.4",
     "@eslint/plugin-kit": ">= 0.2.3",
     "@nwlnexus/config": "^1",
     "@types/node": "^20",
     "@types/pg": "^8",
     "@vitest/coverage-v8": "^2",
-    "drizzle-kit": "^0.29",
+    "drizzle-kit": "^0.29.1",
+    "esbuild": "^0.24.0",
     "eslint": "^9",
+    "eslint-config-oclif-typescript": "^3.1.13",
     "msw": "^2",
     "prettier": "^3",
     "shx": "^0.3",
@@ -84,6 +89,10 @@
     },
     "plugins": [
       "@oclif/plugin-*"
-    ]
+    ],
+    "macos": {
+      "identifier": "com.dtlr.jdna-sync",
+      "sign": "\"DTLR HOLDING, INC (8M565SWY3Y)\""
+    }
   }
 }

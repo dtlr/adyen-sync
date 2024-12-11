@@ -1,8 +1,8 @@
 import { logger } from '@core/utils.js'
-import { app } from '@web'
 import { serve } from '@hono/node-server'
-import { BaseCommand } from '@/base-command.js'
 import { Flags } from '@oclif/core'
+import { app } from '@web'
+import { BaseCommand } from '@/base-command.js'
 
 export class ServeCommand extends BaseCommand<typeof ServeCommand> {
   static description = 'Serve the web app'
@@ -16,6 +16,10 @@ export class ServeCommand extends BaseCommand<typeof ServeCommand> {
   }
 
   async run(): Promise<void> {
+    await this.config.runHook('migration', {
+      requestId: 'serve-command',
+      id: 'serve-command',
+    })
     const { flags } = await this.parse(ServeCommand)
 
     const port = flags.port

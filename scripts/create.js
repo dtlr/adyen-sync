@@ -1,8 +1,8 @@
-import { createApiClient } from '@neondatabase/api-client'
-import { ItemBuilder, OnePasswordConnect } from '@1password/connect'
 import { readFileSync } from 'fs'
-import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
+import { ItemBuilder, OnePasswordConnect } from '@1password/connect'
+import { createApiClient } from '@neondatabase/api-client'
 import { parseConnectionUri } from './utils.js'
 import 'dotenv/config'
 

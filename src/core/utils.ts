@@ -1,6 +1,6 @@
+import { init } from '@paralleldrive/cuid2'
 import { config, createLogger as createWinstonLogger, transports, format } from 'winston'
 import { STOREREFPATTERN } from '@/constants.js'
-import { init } from '@paralleldrive/cuid2'
 
 export const createLogger = (context?: string) =>
   createWinstonLogger({
@@ -8,12 +8,7 @@ export const createLogger = (context?: string) =>
     level: (process.env.LOG_LEVEL as string)?.toLowerCase() || 'info',
     defaultMeta: { context: context || 'jdna-sync' },
     transports: [new transports.Console({ forceConsole: true })],
-    format: format.combine(
-      format.timestamp(),
-      format.errors({ stack: true }),
-      format.json(),
-      format.prettyPrint(),
-    ),
+    format: format.combine(format.timestamp(), format.errors({ stack: true }), format.json()),
   })
 
 export const logger = (context?: string) => {
@@ -26,6 +21,7 @@ export const parseStoreRef = (reference: string) => {
   const match = reference.match(STOREREFPATTERN)
   if (!match) return null
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, letters, numbers] = match
   return {
     prefix: letters,

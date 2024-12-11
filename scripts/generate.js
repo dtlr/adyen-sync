@@ -1,11 +1,11 @@
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
-import { createApiClient } from '@neondatabase/api-client'
 import { execSync } from 'child_process'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
+import { createApiClient } from '@neondatabase/api-client'
 
 import { drizzleConfig } from '../templates/drizzle-config.js'
-import { githubWorkflow } from '../templates/github-workflow.js'
+// import { githubWorkflow } from '../templates/github-workflow.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -46,14 +46,12 @@ const neonApi = createApiClient({
         mkdirSync(path)
       }
 
-      if (!existsSync(`${path}/${file}`)) {
-        writeFileSync(`${path}/${file}`, drizzleConfig(safeName, envVarName))
-        console.info('Set drizzle config for:', safeName)
-      }
+      writeFileSync(`${path}/${file}`, drizzleConfig(safeName, envVarName))
+      console.info('Set drizzle config for:', safeName)
 
       console.log('Run drizzle-kit generate for :', safeName)
       try {
-        const output = execSync(`drizzle-kit generate --config=${path}/${file}`, {
+        const output = execSync(`npx --yes drizzle-kit generate --config=${path}/${file}`, {
           encoding: 'utf-8',
         })
         if (output.trim()) {

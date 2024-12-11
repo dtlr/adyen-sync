@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, suite } from 'vitest'
-import { app } from '../src/index.js'
 import { fetchAdyenData } from '../src/adyen.js'
 import { updateDatabase } from '../src/db.js'
+import { app } from '../src/index.js'
 
 vi.mock('../src/db', () => ({
   updateDatabase: vi.fn(),

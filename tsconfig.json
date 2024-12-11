@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "declaration": true,
     "composite": false,
     "target": "esnext",
     "module": "ESNext",
@@ -11,6 +12,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "verbatimModuleSyntax": false,
+    "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmit": false,
@@ -28,6 +30,6 @@
       "@web/*": ["./src/web/*"]
     }
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": ["src/**/*", "src/property.json"],
+  "exclude": ["node_modules", "dist", "tests", "scripts", "configs"]
 }
