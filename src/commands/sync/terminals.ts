@@ -1,3 +1,4 @@
+import { migrateDb } from '@core/migrate'
 import { getAdyenTerminals, processTerminals, updateJMDatabase } from '@core/process/terminals.js'
 import { logger } from '@util/logger.js'
 import { SyncBaseCommand } from '@/base-cmds/sync-base-command.js'
@@ -19,6 +20,8 @@ export class SyncTerminalsCommand extends SyncBaseCommand<typeof SyncTerminalsCo
       message: 'Starting local sync',
     })
     for (const idx in flags.banner) {
+      await migrateDb(flags.requestId, flags.banner[idx])
+
       const adyenTerminals = await getAdyenTerminals({
         requestId: flags.requestId,
         banner: flags.banner[idx],

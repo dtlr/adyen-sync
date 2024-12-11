@@ -1,6 +1,7 @@
 import { logger } from '@util/logger.js'
 import axios from 'axios'
 import {
+  type AdyenStoreCreate,
   type AdyenStore,
   type AdyenStoresResponse,
   type AdyenTerminal,
@@ -9,6 +10,36 @@ import {
 
 import { type APP_ENVS } from '@/constants'
 import { AppError } from '@/error.js'
+
+const adyenConfig = (appEnv: (typeof APP_ENVS)[number]) => {
+  const { ADYEN_KEY, ADYEN_KEY_LIVE, ADYEN_KEY_TEST } = process.env
+
+  if (!ADYEN_KEY && (!ADYEN_KEY_LIVE || !ADYEN_KEY_TEST)) {
+    throw new AppError({
+      name: 'ADYEN_CONFIG_MISSING',
+      message: 'ADYEN_KEY, ADYEN_KEY_LIVE, and ADYEN_KEY_TEST must be set',
+    })
+  }
+
+  return {
+    ax: axios.create({
+      baseURL:
+        appEnv === 'live' || appEnv === 'prod'
+          ? 'https://management-live.adyen.com/v3'
+          : 'https://management-test.adyen.com/v3',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-key':
+          ADYEN_KEY ?? (appEnv === 'live' || appEnv === 'prod' ? ADYEN_KEY_LIVE : ADYEN_KEY_TEST),
+      },
+    }),
+    key: ADYEN_KEY ?? (appEnv === 'live' || appEnv === 'prod' ? ADYEN_KEY_LIVE : ADYEN_KEY_TEST),
+    endpoint:
+      appEnv === 'live' || appEnv === 'prod'
+        ? 'https://management-live.adyen.com/v3'
+        : 'https://management-test.adyen.com/v3',
+  }
+}
 
 export const fetchAdyenData = async ({
   requestId,
@@ -27,13 +58,8 @@ export const fetchAdyenData = async ({
     reference?: string
   }
 }) => {
-  const adyenKey = process.env.ADYEN_KEY
-    ? process.env.ADYEN_KEY
-    : appEnv === 'live' || appEnv === 'prod'
-      ? process.env.ADYEN_KEY_LIVE
-      : process.env.ADYEN_KEY_TEST
-  const adyenEndpoint =
-    appEnv === 'live' || appEnv === 'prod' ? 'management-live' : 'management-test'
+  const { key, endpoint } = adyenConfig(appEnv)
+
   try {
     let pagesTotal: number
     let data: (AdyenStore | AdyenTerminal)[] = []
@@ -68,13 +94,11 @@ export const fetchAdyenData = async ({
 
     do {
       const query =
-        opts.type?.toLowerCase() === 'stores'
-          ? `https://${adyenEndpoint}.adyen.com/v3/stores`
-          : `https://${adyenEndpoint}.adyen.com/v3/terminals`
+        opts.type?.toLowerCase() === 'stores' ? `${endpoint}/stores` : `${endpoint}/terminals`
       const response = await axios.get<AdyenStoresResponse | AdyenTerminalsResponse>(query, {
         headers: {
           'Content-Type': 'application/json',
-          'X-API-key': adyenKey,
+          'X-API-key': key,
         },
         params: queryParams,
       })
@@ -97,4 +121,31 @@ export const fetchAdyenData = async ({
       cause: error,
     })
   }
+}
+
+export const updateAdyenStore = async (
+  appEnv: (typeof APP_ENVS)[number],
+  storeId: string,
+  store: AdyenStoreCreate,
+) => {
+  const { ax } = adyenConfig(appEnv)
+  const query = await ax.patch(`/stores/${storeId}`, store)
+  return query.data
+}
+
+export const createAdyenStore = async (
+  appEnv: (typeof APP_ENVS)[number],
+  store: AdyenStoreCreate,
+) => {
+  const { ax } = adyenConfig(appEnv)
+  const query = await ax.post<AdyenStore>(`/stores`, store)
+  return query.data
+}
+
+export const deactivateAdyenStore = async (appEnv: (typeof APP_ENVS)[number], storeId: string) => {
+  const { ax } = adyenConfig(appEnv)
+  const query = await ax.patch(`/stores/${storeId}`, {
+    status: 'inactive',
+  })
+  return query.data
 }

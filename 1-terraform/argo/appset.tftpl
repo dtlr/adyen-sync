@@ -1,0 +1,221 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ${ app_name }-${ env }
+  namespace: argocd
+  labels:
+    app: ${ app_name }-${ env }
+    env: ${ env }
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  generators:
+    - list:
+        elements:
+          ${ indent(10, list_elements) }
+  template:
+    metadata:
+      name: '${ app_name }-{{ .banner }}-${ env }'
+      labels:
+        app: '${ app_name }-{{ .banner }}-${ env }'
+        env: ${ env }
+    spec:
+      project: ${ project_name }
+      destination:
+        namespace: ${ dest_cluster_ns }
+        name: ${ dest_cluster_name }
+      sources:
+        - repoURL: ${ repo_url }
+          targetRevision: ${ target_revision }
+          path: argo-app
+          kustomize:
+            namespace: ${ dest_cluster_ns }
+            commonLabels:
+              app: '${ app_name }-{{ .banner }}-${ env }'
+              env: ${ env }
+              banner: '{{ .banner }}'
+            images:
+              - ${ image_registry }/${ app_name }:${ image_tag }
+            patches:
+              - patch: |
+                  - op: replace
+                    path: /metadata/name
+                    value: '${ app_name }-{{ .banner }}-${ env }'
+                target:
+                  kind: Service
+                  name: svc
+              - patch: |
+                  - op: replace
+                    path: /spec/selector/app
+                    value: '${ app_name }-{{ .banner }}-${ env }'
+                target:
+                  kind: Service
+                  name: svc
+              - patch: |
+                  - op: replace
+                    path: /metadata/name
+                    value: '${ app_name }-{{ .banner }}-${ env }'
+                target:
+                  kind: Deployment
+                  name: appDeployment
+              - patch: |
+                  - op: replace
+                    path: /spec/selector/matchLabels/app
+                    value: '${ app_name }-{{ .banner }}-${ env }'
+                target:
+                  kind: Deployment
+                  name: appDeployment
+              - patch: |
+                  - op: replace
+                    path: /spec/template/spec/containers/0/name
+                    value: '${ app_name }-{{ .banner }}-${ env }'
+                target:
+                  kind: Deployment
+                  name: appDeployment
+              - patch: |
+                  - op: replace
+                    path: /spec/template/spec/containers/0/env/3/value
+                    value: %{ if env == "live" }info%{ else }debug%{ endif }
+                target:
+                  kind: Deployment
+                  name: appDeployment
+              - patch: |
+                  - op: replace
+                    path: /spec/template/spec/containers/0/env/5/name
+                    value: '{{ upper .banner }}_DATABASE_URI'
+                target:
+                  kind: Deployment
+                  name: appDeployment
+              - patch: |
+                  - op: replace
+                    path: /spec/rules/0/host
+                    value: '${ app_name }-{{ .banner }}%{ if env != "live" }.test%{ endif }.jdna.io'
+                target:
+                  kind: Ingress
+                  name: appIngress
+              - patch: |
+                  - op: replace
+                    path: /spec/tls/0/hosts/0
+                    value: '${ app_name }-{{ .banner }}%{ if env != "live" }.test%{ endif }.jdna.io'
+                target:
+                  kind: Ingress
+                  name: appIngress
+              - patch: |
+                  - op: replace
+                    path: /spec/tls/0/secretName
+                    value: '${ app_name }-{{ .banner }}-${ env }-tls'
+                target:
+                  kind: Ingress
+                  name: appIngress
+              - patch: |
+                  - op: replace
+                    path: /metadata/name
+                    value: 'sync-stores-{{ .banner }}-${ env }'
+                target:
+                  kind: CronJob
+                  name: appSyncStoresCronJob
+              - patch: |
+                  - op: replace
+                    path: /spec/template/spec/containers/0/name
+                    value: 'sync-stores-{{ .banner }}-${ env }'
+                target:
+                  kind: CronJob
+                  name: appSyncStoresCronJob
+              - patch: |
+                  - op: replace
+                    path: /spec/template/spec/containers/0/env/8/name
+                    value: '{{ upper .banner }}_DATABASE_URI'
+                target:
+                  kind: CronJob
+                  name: appSyncStoresCronJob
+              - patch: |
+                  - op: replace
+                    path: /spec/template/spec/containers/0/env/8/valueFrom/secretKeyRef/key
+                    value: '{{ upper .banner }}_DATABASE_URI'
+                target:
+                  kind: CronJob
+                  name: appSyncStoresCronJob
+              - patch: |
+                  - op: replace
+                    path: /metadata/name
+                    value: 'sync-terminals-{{ .banner }}-${ env }'
+                target:
+                  kind: CronJob
+                  name: appSyncTerminalsCronJob
+              - patch: |
+                  - op: replace
+                    path: /spec/template/spec/containers/0/name
+                    value: 'sync-terminals-{{ .banner }}-${ env }'
+                target:
+                  kind: CronJob
+                  name: appSyncTerminalsCronJob
+              - patch: |
+                  - op: replace
+                    path: /spec/template/spec/containers/0/env/8/name
+                    value: '{{ upper .banner }}_DATABASE_URI'
+                target:
+                  kind: CronJob
+                  name: appSyncTerminalsCronJob
+              - patch: |
+                  - op: replace
+                    path: /spec/template/spec/containers/0/env/8/valueFrom/secretKeyRef/key
+                    value: '{{ upper .banner }}_DATABASE_URI'
+                target:
+                  kind: CronJob
+                  name: appSyncTerminalsCronJob
+
+        - repoURL: ${ repo_url }
+          targetRevision: ${ target_revision }
+          path: argo-app-secret
+          kustomize:
+            namespace: ${ dest_cluster_ns }
+            commonLabels:
+              env: ${ env }
+              banner: '{{ .banner }}'
+            patches:
+              - patch: |
+                  - op: replace
+                    path: /metadata/name
+                    value: ${ app_secret_name }
+                target:
+                  kind: ExternalSecret
+                  name: app-secret
+              - patch: |
+                  - op: replace
+                    path: /spec/target/name
+                    value: ${ app_secret_name }
+                target:
+                  kind: ExternalSecret
+                  name: app-secret
+              - patch: |
+                  - op: app
+                    path: /spec/data/0/secretKey/remoteRef/property
+                    value: %{if env == "live" }credential%{ else }credential-test%{ endif }
+                target:
+                  kind: ExternalSecret
+                  name: app-secret
+              - patch: |
+                  - op: app
+                    path: /spec/data/8/secretKey
+                    value: '{{ upper .banner }}_DATABASE_URI'
+                target:
+                  kind: ExternalSecret
+                  name: app-secret
+              - patch: |
+                  - op: app
+                    path: /spec/data/8/remoteRef/key
+                    value: 'jdna-sync-{{ .banner }}-${ env }'
+                target:
+                  kind: ExternalSecret
+                  name: app-secret
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+          - RespectIgnoreDifferences=true
+        automated:
+          prune: true
+          selfHeal: true

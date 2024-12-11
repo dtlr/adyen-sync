@@ -1,21 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jdna-sync
+  name: appDeployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: jdna-sync
+      app: appName
   template:
-    metadata:
-      labels:
-        app: jdna-sync
-        tags.datadoghq.com/jdna-sync.env: qa
     spec:
       containers:
-        - name: jdna-sync
-          image: ghcr.io/dtlr/jdna-sync:edge
+        - name: appName
+          image: ghcr.io/dtlr/appName:edge
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -23,11 +19,11 @@ spec:
             - name: DD_ENV
               valueFrom:
                 fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/jdna-sync.env']
+                  fieldPath: metadata.labels['tags.datadoghq.com/app.env']
             - name: DD_SERVICE
               valueFrom:
                 fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/jdna-sync.service']
+                  fieldPath: metadata.labels['tags.datadoghq.com/app.service']
             - name: APP_PORT
               value: '3000'
             - name: LOG_LEVEL
@@ -41,11 +37,6 @@ spec:
                 secretKeyRef:
                   name: app-secret
                   key: DTLR_DATABASE_URI
-            - name: SPC_DATABASE_URI
-              valueFrom:
-                secretKeyRef:
-                  name: app-secret
-                  key: SPC_DATABASE_URI
             - name: LOCATIONSAPI_URL
               valueFrom:
                 secretKeyRef:

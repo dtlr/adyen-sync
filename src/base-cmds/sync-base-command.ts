@@ -54,6 +54,10 @@ export abstract class SyncBaseCommand<T extends typeof Command> extends Command 
   protected flags!: Flags<T>
   protected args!: Args<T>
 
+  public jsonEnabled(): boolean {
+    return super.jsonEnabled() || this.ctor.enableJsonFlag
+  }
+
   public async init(): Promise<void> {
     await super.init()
     const { args, flags } = await this.parse({

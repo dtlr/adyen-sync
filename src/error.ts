@@ -33,4 +33,5 @@ type ErrorName =
   | 'ENV_ERROR'
   | 'PROPERTY_FILE_MISSING'
   | 'MISSING_MERCHANT_ID'
+  | 'PROCESS_ADYEN_STORES'
 export class AppError extends ErrorBase<ErrorName> {}

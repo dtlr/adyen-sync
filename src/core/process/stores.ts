@@ -1,10 +1,16 @@
+import { neonDb } from '@core/db'
 import * as neonSchema from '@db/neonSchema.js'
-import { fetchAdyenData } from '@eapis/adyen.js'
+import {
+  createAdyenStore,
+  deactivateAdyenStore,
+  fetchAdyenData,
+  updateAdyenStore,
+} from '@eapis/adyen.js'
 import { getLocations } from '@eapis/jdna.js'
 import { parseStoreRef } from '@util'
 import { logger } from '@util/logger.js'
-import { drizzle } from 'drizzle-orm/neon-serverless'
-import { type AdyenStore } from 'types/adyen.js'
+import { eq } from 'drizzle-orm'
+import { type AdyenStoreCreate, type AdyenStore } from 'types/adyen.js'
 import { type APP_ENVS } from '@/constants.js'
 import { AppError } from '@/error.js'
 
@@ -66,10 +72,6 @@ export const processJDNAStores = async ({
   jdnaStores: Awaited<ReturnType<typeof getJDNAStores>>
   adyenStores: AdyenStore[]
 }) => {
-  logger('process-jdna-stores').info({
-    requestId,
-    message: `Processing ${jdnaStores.size} stores`,
-  })
   const items: neonSchema.InsertInternalStore[] = []
   const storeIds: string[] = []
 
@@ -126,7 +128,7 @@ export const processJDNAStores = async ({
     message: `Using database connection string: ${process.env[`${banner.toUpperCase()}_DATABASE_URI`]}`,
   })
   try {
-    const db = drizzle(connString, { schema: neonSchema })
+    const db = neonDb(connString, { schema: neonSchema })
     await db.transaction(async (tx) => {
       for (const item of tmp) {
         await tx
@@ -154,4 +156,87 @@ export const processJDNAStores = async ({
   }
 
   return storeIds
+}
+
+export const processAdyenStores = async ({
+  requestId,
+  banner,
+  appEnv,
+}: {
+  requestId: string
+  banner: string
+  merchantId: string
+  appEnv: (typeof APP_ENVS)[number]
+}) => {
+  // Read all stores from the database using banner to determine which database to use
+  const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
+  if (!connString) {
+    throw new AppError({
+      requestId,
+      name: 'DATABASE_CONFIG_MISSING',
+      message: `No database connection string found for ${banner}`,
+    })
+  }
+  logger('process-adyen-stores').debug({
+    requestId,
+    message: `Using database connection string: ${process.env[`${banner.toUpperCase()}_DATABASE_URI`]}`,
+  })
+  try {
+    const db = neonDb(connString, { schema: neonSchema })
+    const stores = await db.select().from(neonSchema.stores)
+    // Iterate over the stores and test for the following:
+    // 1. If the store has an adyenId, then we need to update the record in Adyen
+    // 2. If the store does not have an adyenId, then we need to create a new store in Adyen
+    // Be sure to update the database with the new adyenId and adyenReference
+    for (const store of stores) {
+      const adyenStore: AdyenStoreCreate = {
+        description: store.name,
+        shopperStatement: store.code,
+        phoneNumber: '+14108505911',
+        merchantId: store.adyenMerchantId!,
+        reference: store.code,
+        address: {
+          country: 'US',
+          line1: store.addressLine1!,
+          line2: store.addressLine2!,
+          city: store.addressCity!,
+          postalCode: store.addressZipCode!,
+          stateOrProvince: store.addressState!.trim().toUpperCase(),
+        },
+      }
+      if (store.adyenId && store.status) {
+        await updateAdyenStore(appEnv, store.adyenId, adyenStore)
+      } else if (!store.adyenId && store.status) {
+        const newStore = await createAdyenStore(appEnv, adyenStore)
+        await db
+          .update(neonSchema.stores)
+          .set({
+            adyenId: newStore.id,
+            adyenReference: newStore.reference,
+          })
+          .where(eq(neonSchema.stores.code, store.code))
+      } else if (store.adyenId && !store.status) {
+        await deactivateAdyenStore(appEnv, store.adyenId)
+        await db
+          .update(neonSchema.stores)
+          .set({
+            adyenId: null,
+            adyenReference: null,
+          })
+          .where(eq(neonSchema.stores.code, store.code))
+      }
+    }
+  } catch (error) {
+    logger('process-adyen-stores').error({
+      requestId,
+      message: `Error processing stores for ${banner}`,
+      error,
+    })
+    throw new AppError({
+      requestId,
+      name: 'PROCESS_ADYEN_STORES',
+      message: `Error processing stores for ${banner}`,
+      cause: error,
+    })
+  }
 }

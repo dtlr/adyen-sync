@@ -44,6 +44,7 @@
     "@oclif/plugin-which": "^3.2.20",
     "@paralleldrive/cuid2": "^2",
     "axios": "^1",
+    "bufferutil": "^4.0.8",
     "dotenv": "^16",
     "drizzle-orm": "^0.37",
     "drizzle-zod": "^0.5.1",
@@ -51,6 +52,7 @@
     "libsodium-wrappers": "^0.7.15",
     "pg": "^8",
     "winston": "^3",
+    "ws": "^8.18.0",
     "zod": "^3"
   },
   "devDependencies": {
@@ -59,6 +61,7 @@
     "@nwlnexus/config": "^1",
     "@types/node": "^20",
     "@types/pg": "^8",
+    "@types/ws": "^8.5.13",
     "@vitest/coverage-v8": "^2",
     "drizzle-kit": "^0.29.1",
     "esbuild": "^0.24.0",
@@ -98,8 +101,7 @@
     "hooks": {
       "init": [
         "./dist/hooks/init/env-checks"
-      ],
-      "migration": "./dist/hooks/migration"
+      ]
     },
     "info": {
       "releasenotes": {

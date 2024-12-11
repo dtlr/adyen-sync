@@ -1,10 +1,10 @@
+import { jmDb, neonDb } from '@core/db'
 import * as jmSchema from '@db/jmSchema.js'
 import * as neonSchema from '@db/neonSchema.js'
 import { fetchAdyenData } from '@eapis/adyen.js'
 import { findDifference } from '@util/index.js'
 import { logger } from '@util/logger.js'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/node-postgres'
 import { type AdyenTerminal } from 'types/adyen.js'
 import { type APP_ENVS, POSWRKIDS } from '@/constants.js'
 import { AppError } from '@/error.js'
@@ -140,7 +140,7 @@ export const processTerminals = async ({
       message: `No database connection string found for ${banner}`,
     })
   }
-  const db = drizzle(connString, { schema: neonSchema })
+  const db = neonDb(connString, { schema: neonSchema })
   await db.transaction(async (tx) => {
     for (const item of tmp) {
       let storeId: string | undefined
@@ -196,19 +196,34 @@ export const updateJMDatabase = async ({
   let logItem: unknown
   const envInitial = appEnv.toLowerCase() === 'live' ? 'p' : 'q'
   const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env
+
+  if (!DB_USER || !DB_PASSWORD || !DB_HOST || !DB_PORT) {
+    throw new AppError({
+      name: 'DATABASE_CONFIG_MISSING',
+      requestId,
+      message: 'No database connection string found',
+    })
+  }
+
   const banner = data[0].banner
 
-  const dtlrDb = drizzle({
-    connection: `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT ?? 5432}/dtlr-${appEnv.toLowerCase() === 'live' ? 'prod' : 'qa'}`,
-    schema: jmSchema,
-    casing: 'snake_case',
-  })
+  const dtlrDb = jmDb(
+    { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT },
+    `dtlr-${appEnv.toLowerCase() === 'live' ? 'prod' : 'qa'}`,
+    {
+      schema: jmSchema,
+      casing: 'snake_case',
+    },
+  )
 
-  const bannerDb = drizzle({
-    connection: `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT ?? 5432}/${banner.toLowerCase()}-${appEnv.toLowerCase() === 'live' ? 'prod' : 'qa'}`,
-    schema: jmSchema,
-    casing: 'snake_case',
-  })
+  const bannerDb = jmDb(
+    { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT },
+    `${banner.toLowerCase()}-${appEnv.toLowerCase() === 'live' ? 'prod' : 'qa'}`,
+    {
+      schema: jmSchema,
+      casing: 'snake_case',
+    },
+  )
 
   if (data.length === 0) {
     logger('update-jm-database').debug({

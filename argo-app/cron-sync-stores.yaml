@@ -1,36 +1,31 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: jdna-sync-terminals
+  name: appSyncStoresCronJob
 spec:
-  schedule: '0 * * * *'
+  schedule: '0 4,16 * * *'
   concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
       template:
-        metadata:
-          labels:
-            app: jdna-sync-job
-            tags.datadoghq.com/jdna-sync-terminals.env: qa
-            tags.datadoghq.com/jdna-sync-job.service: jdna-sync-terminals
         spec:
           restartPolicy: Never
           containers:
-            - name: jdna-sync-terminals
+            - name: jdna-sync-stores
               image: ghcr.io/dtlr/jdna-sync:edge
               imagePullPolicy: Always
-              args: ['sync', 'terminals']
+              args: ['sync', 'stores']
               env:
                 - name: DD_ENV
                   valueFrom:
                     fieldRef:
-                      fieldPath: metadata.labels['tags.datadoghq.com/jdna-sync-terminals.env']
+                      fieldPath: metadata.labels['tags.datadoghq.com/app.env']
                 - name: DD_SERVICE
                   valueFrom:
                     fieldRef:
-                      fieldPath: metadata.labels['tags.datadoghq.com/jdna-sync-terminalsservice']
+                      fieldPath: metadata.labels['tags.datadoghq.com/app.service']
                 - name: APP_ENV
                   valueFrom:
                     fieldRef:
@@ -60,16 +55,11 @@ spec:
                     secretKeyRef:
                       name: app-secret
                       key: ADYEN_KEY
-                - name: DTLR_DATABASE_URI
+                - name: APP_DATABASE_URI
                   valueFrom:
                     secretKeyRef:
                       name: app-secret
                       key: DTLR_DATABASE_URI
-                - name: SPC_DATABASE_URI
-                  valueFrom:
-                    secretKeyRef:
-                      name: app-secret
-                      key: SPC_DATABASE_URI
                 - name: LOCATIONSAPI_URL
                   valueFrom:
                     secretKeyRef:

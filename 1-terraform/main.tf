@@ -54,192 +54,46 @@ provider "kubernetes" {
 }
 
 locals {
-  app_name = var.app_name != null ? var.app_name : "jdna-sync"
+  app_name        = var.app_name != null ? var.app_name : "jdna-sync"
+  app_secret_name = "app-secret"
+  banners         = keys(jsondecode(file("${path.module}/../property.json")))
+
+  appset = yamlencode(templatefile("${path.module}/argo/appset.tftpl", {
+    app_name          = local.app_name
+    env               = terraform.workspace == "main" ? "live" : "test"
+    dest_cluster_name = data.terraform_remote_state.app_0.outputs.argo_details.destination
+    dest_cluster_ns   = data.terraform_remote_state.app_0.outputs.namespace
+    project_name      = local.app_name
+    list_elements     = yamlencode([for banner in local.banners : { banner = banner }])
+    repo_url          = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
+    target_revision   = terraform.workspace
+    image_registry    = var.image_registry
+    image_name        = local.app_name
+    image_tag         = var.image_tags[terraform.workspace]
+    app_secret_name   = "${local.app_secret_name}-${terraform.workspace == "main" ? "live" : "test"}"
+  }))
+
+  appset_json = jsonencode(yamldecode(local.appset))
 }
 
-resource "kubernetes_manifest" "argo_app" {
-  manifest = {
-    apiVersion = "argoproj.io/v1alpha1"
-    kind       = "Application"
-    metadata = {
-      labels = {
-        app = "${local.app_name}-${terraform.workspace == "main" ? "live" : "test"}"
-        env = terraform.workspace == "main" ? "live" : "test"
-      }
-      name      = "${local.app_name}-${terraform.workspace == "main" ? "live" : "test"}"
-      namespace = data.terraform_remote_state.app_0.outputs.namespace
-    }
-    spec = {
-      destination = {
-        name      = data.terraform_remote_state.app_0.outputs.argo_details.destination
-        namespace = "${data.terraform_remote_state.app_0.outputs.argo_details.namespace}-${terraform.workspace == "main" ? "live" : "test"}"
-      }
-      project = data.terraform_remote_state.app_0.outputs.argo_details.project_name
-      sources = [
-        {
-          kustomize = {
-            commonLabels = {
-              env                                            = terraform.workspace == "main" ? "live" : "test"
-              "tags.datadoghq.com/${local.app_name}.env"     = terraform.workspace == "main" ? "live" : "test"
-              "tags.datadoghq.com/${local.app_name}.service" = local.app_name
-            }
-            namespace = "${data.terraform_remote_state.app_0.outputs.argo_details.namespace}-${terraform.workspace == "main" ? "live" : "test"}"
-            images = [
-              "${var.image_registry}/${local.app_name}:${var.image_tags[terraform.workspace]}"
-            ]
-            patches = [
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /metadata/name
-                  value: ${local.app_name}
-                
-                EOT
-                target = {
-                  kind = "Service"
-                  name = "svc"
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/selector/app
-                  value: ${local.app_name}
-                
-                EOT
-                target = {
-                  kind = "Service"
-                  name = "svc"
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/data/0/remoteRef/property
-                  value: ${terraform.workspace == "main" ? "credential" : "credential-test"}
-                EOT
-                target = {
-                  kind = "ExternalSecret"
-                  name = "app-secret"
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/data/8/remoteRef/key
-                  value: ${terraform.workspace == "main" ? "${local.app_name}-dtlr-live" : "${local.app_name}-dtlr-test"}
-                EOT
-                target = {
-                  kind = "ExternalSecret"
-                  name = "app-secret"
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/data/9/remoteRef/key
-                  value: ${terraform.workspace == "main" ? "${local.app_name}-spc-live" : "${local.app_name}-spc-test"}
-                EOT
-                target = {
-                  kind = "ExternalSecret"
-                  name = "app-secret"
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/template/spec/containers/0/env/0
-                  value:
-                    name: APP_PORT
-                    value: "3000"
-                
-                EOT
-                target = {
-                  kind = "Deployment"
-                  name = local.app_name
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: add
-                  path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
-                  value: "${local.app_name}${terraform.workspace == "main" ? "" : "-test"}.jdna.io"
-                
-                EOT
-                target = {
-                  kind = "Ingress"
-                  name = local.app_name
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/rules/0/host
-                  value: "${local.app_name}${terraform.workspace == "main" ? "" : "-test"}.jdna.io"
-                
-                EOT
-                target = {
-                  kind = "Ingress"
-                  name = local.app_name
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/tls/0/hosts/0
-                  value: "${local.app_name}${terraform.workspace == "main" ? "" : "-test"}.jdna.io"
-                
-                EOT
-                target = {
-                  kind = "Ingress"
-                  name = local.app_name
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/tls/0/secretName
-                  value: "${local.app_name}-tls"
-                
-                EOT
-                target = {
-                  kind = "Ingress"
-                  name = local.app_name
-                }
-              },
-            ]
-          }
-          path           = "argo"
-          repoURL        = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
-          targetRevision = terraform.workspace
-        },
-      ]
-      syncPolicy = {
-        automated = {
-          prune    = true
-          selfHeal = true
-        }
-        syncOptions = [
-          "CreateNamespace=true",
-          "PrunePropagationPolicy=foreground",
-          "PruneLast=true",
-          "RespectIgnoreDifferences=true",
-        ]
-      }
-    }
-  }
+resource "local_file" "argo_appset" {
+  content  = yamldecode(local.appset)
+  filename = "${path.module}/argo/appset.yaml"
 }
 
-
-# resource "local_file" "appset" {
-#   filename = "${path.module}/tfgen_appset.yml"
-#   content = templatefile("${path.module}/tpls/appset.tpl", {
-#     name           = "adyen-sync"
-#     namespace      = local.app_namespace
-#     project_name   = "adyen-sync"
-#     cluster_name   = nonsensitive(data.terraform_remote_state.azure_0.outputs.aks_details.name)
-#     image_tags     = var.image_tags
-#     image_name     = var.image_name
-#     image_registry = var.image_registry
-#   })
+# resource "kubernetes_manifest" "argo_appset" {
+#   manifest = provider::kubernetes::manifest_decode(yamlencode(templatefile("${path.module}/argo/appset.tftpl", {
+#     app_name          = local.app_name
+#     env               = terraform.workspace == "main" ? "live" : "test"
+#     dest_cluster_name = "${local.app_name}-${terraform.workspace == "main" ? "live" : "test"}"
+#     dest_cluster_ns   = data.terraform_remote_state.app_0.outputs.namespace
+#     project_name      = local.app_name
+#     list_elements     = yamlencode([for banner in local.banners : { "banner" = banner }])
+#     repo_url          = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
+#     target_revision   = terraform.workspace
+#     image_registry    = var.image_registry
+#     image_name        = local.app_name
+#     image_tag         = var.image_tags[terraform.workspace]
+#     app_secret_name   = "${local.app_secret_name}-${terraform.workspace == "main" ? "live" : "test"}"
+#   })))
 # }

@@ -1,3 +1,4 @@
+import { migrateDb } from '@core/migrate'
 import { getAdyenStores, getJDNAStores, processJDNAStores } from '@core/process/stores.js'
 import { logger } from '@util/logger.js'
 import { SyncBaseCommand } from '@/base-cmds/sync-base-command.js'
@@ -13,9 +14,9 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
         '<%= config.bin %> <%= command.id %> --banner=banner1 --merchantId=merchant1 --app-env=test',
     },
     {
-      description: 'Sync stores for multiple banners in the staging environment',
+      description: 'Sync stores for multiple banners in the live environment',
       command:
-        '<%= config.bin %> <%= command.id %> --banner=banner1,banner2 --merchantId=merchant1,merchant2 --app-env=staging',
+        '<%= config.bin %> <%= command.id %> --banner=banner1,banner2 --merchantId=merchant1,merchant2 --app-env=live',
     },
   ]
 
@@ -33,6 +34,8 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
     }
 
     for (const idx in flags.banner) {
+      await migrateDb(flags.requestId, flags.banner[idx])
+
       const jdnaStores = await getJDNAStores({
         requestId: flags.requestId,
         banner: flags.banner[idx],
@@ -49,15 +52,16 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
         message: 'Completed local sync',
       })
 
-      if (flags.local) {
-        this.exit(0)
-      }
       storeIds = await processJDNAStores({
         requestId: flags.requestId,
         banner: flags.banner[idx],
         jdnaStores,
         adyenStores,
       })
+
+      if (flags.local) {
+        process.exit(0)
+      }
     }
 
     logger('commands-sync-stores').info({

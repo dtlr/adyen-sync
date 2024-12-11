@@ -3,12 +3,6 @@ kind: Kustomization
 
 resources:
   - app-secret.yaml
-  - pull-secret.yaml
-  - deployment.yaml
-  - service.yaml
-  - ingress.yaml
-  - sync-stores.yaml
-  - sync-terminals.yaml
 
 labels:
   - pairs:

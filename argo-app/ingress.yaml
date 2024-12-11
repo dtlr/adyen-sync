@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: jdna-sync
+  name: appIngress
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: 'true'
@@ -10,14 +10,14 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: example.jdna.io
+    - host: example.appName.io
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: jdna-sync
+                name: appName
                 port:
                   number: 80
   tls:
