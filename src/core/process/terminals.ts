@@ -1,13 +1,13 @@
+import * as jmSchema from '@db/jmSchema.js'
+import * as neonSchema from '@db/neonSchema.js'
 import { fetchAdyenData } from '@eapis/adyen.js'
+import { findDifference } from '@util/index.js'
+import { logger } from '@util/logger.js'
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { type AdyenTerminal } from 'types/adyen.js'
 import { type APP_ENVS, POSWRKIDS } from '@/constants.js'
-import * as jmSchema from '@/db/jmSchema.js'
-import * as neonSchema from '@/db/neonSchema.js'
 import { AppError } from '@/error.js'
-import { findDifference } from '@/util/index.js'
-import { logger } from '@/util/logger.js'
 export const getAdyenTerminals = async ({
   requestId,
   banner,

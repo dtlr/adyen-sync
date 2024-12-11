@@ -1,7 +1,7 @@
+import { logger } from '@util/logger.js'
 import { type LocationLocal, localLocationSchema } from 'types'
 import { type APP_ENVS } from '@/constants.js'
 import { AppError } from '@/error.js'
-import { logger } from '@/util/logger.js'
 
 export const getLocations = async (
   requestId: string,

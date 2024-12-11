@@ -1,3 +1,4 @@
+import { logger } from '@util/logger.js'
 import axios from 'axios'
 import {
   type AdyenStore,
@@ -8,7 +9,6 @@ import {
 
 import { type APP_ENVS } from '@/constants'
 import { AppError } from '@/error.js'
-import { logger } from '@/util/logger.js'
 
 export const fetchAdyenData = async ({
   requestId,

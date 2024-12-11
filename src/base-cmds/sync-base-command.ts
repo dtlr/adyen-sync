@@ -22,16 +22,20 @@ export abstract class SyncBaseCommand<T extends typeof Command> extends Command 
     banner: Flags.string({
       aliases: ['brand', 'fascia'],
       description: 'The banner to sync',
-      env: 'BANNER',
+      env: 'APP_BANNER',
       char: 'b',
-      multiple: false,
+      multiple: true,
+      delimiter: ',',
+      multipleNonGreedy: false,
       required: true,
     }),
     merchantId: Flags.string({
       description: 'The merchant ID to sync',
-      env: 'MERCHANT_ID',
+      env: 'APP_MERCHANT_ID',
       char: 'm',
-      multiple: false,
+      multiple: true,
+      delimiter: ',',
+      multipleNonGreedy: false,
       required: true,
     }),
     local: Flags.boolean({
@@ -40,11 +44,11 @@ export abstract class SyncBaseCommand<T extends typeof Command> extends Command 
       default: false,
       hidden: true,
     }),
-    full: Flags.boolean({
-      description: 'Re-sync all data',
-      char: 'f',
-      default: false,
-    }),
+    // full: Flags.boolean({
+    //   description: 'Re-sync all data',
+    //   char: 'f',
+    //   default: false,
+    // }),
   }
 
   protected flags!: Flags<T>

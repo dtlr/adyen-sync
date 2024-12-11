@@ -17,7 +17,6 @@
     "rootDir": "./src",
     "noEmit": false,
     "paths": {
-      "@/*": ["./src/*"],
       "@db": ["./src/db/index.js"],
       "@db/*": ["./src/db/*"],
       "@core/*": ["./src/core/*"],
@@ -29,7 +28,8 @@
       "@web": ["./src/web/index.js"],
       "@web/*": ["./src/web/*"],
       "@util": ["./src/util/index.js"],
-      "@util/*": ["./src/util/*"]
+      "@util/*": ["./src/util/*"],
+      "@/*": ["./src/*"]
     }
   },
   "ts-node": {

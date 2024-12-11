@@ -1,8 +1,8 @@
 import * as neonSchema from '@db/neonSchema.js'
 import { type Hook } from '@oclif/core'
+import { logger } from '@util/logger.js'
+import { drizzle } from 'drizzle-orm/neon-serverless'
 import { migrate } from 'drizzle-orm/neon-serverless/migrator'
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { logger } from '@/util/logger.js'
 import 'dotenv/config'
 
 const hook: Hook<'migration'> = async function (options) {

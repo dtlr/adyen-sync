@@ -1,48 +1,64 @@
+import { getAdyenStores, getJDNAStores, processJDNAStores } from '@core/process/stores.js'
+import { logger } from '@util/logger.js'
 import { SyncBaseCommand } from '@/base-cmds/sync-base-command.js'
 import { type APP_ENVS } from '@/constants.js'
-import { getAdyenStores, getJDNAStores, processJDNAStores } from '@/core/process/stores.js'
-import { logger } from '@/util/logger.js'
 
 export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand> {
   static description = 'Sync stores'
 
+  static examples = [
+    {
+      description: 'Sync stores for a single banner in the test environment',
+      command:
+        '<%= config.bin %> <%= command.id %> --banner=banner1 --merchantId=merchant1 --app-env=test',
+    },
+    {
+      description: 'Sync stores for multiple banners in the staging environment',
+      command:
+        '<%= config.bin %> <%= command.id %> --banner=banner1,banner2 --merchantId=merchant1,merchant2 --app-env=staging',
+    },
+  ]
+
   async run(): Promise<void> {
     const { flags } = await this.parse(SyncStoresCommand)
+    let storeIds: string[] = []
 
-    logger('commands-sync-stores').info({
-      requestId: flags.requestId,
-      message: 'Starting stores sync',
-    })
-
-    logger('commands-sync-stores').info({
-      requestId: flags.requestId,
-      message: 'Starting local sync',
-    })
-    const jdnaStores = await getJDNAStores({
-      requestId: flags.requestId,
-      banner: flags.banner,
-      storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
-    })
-    const adyenStores = await getAdyenStores({
-      requestId: flags.requestId,
-      merchantId: flags.merchantId,
-      storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
-    })
-
-    logger('commands-sync-stores').info({
-      requestId: flags.requestId,
-      message: 'Completed local sync',
-    })
-
-    if (flags.local) {
-      process.exit(0)
+    if (this.jsonEnabled()) {
+      this.log('Starting stores sync', {
+        context: 'commands-sync-stores',
+        requestId: flags.requestId,
+      })
+    } else {
+      this.log('Starting stores sync')
     }
-    const storeIds = await processJDNAStores({
-      requestId: flags.requestId,
-      banner: flags.banner,
-      jdnaStores,
-      adyenStores,
-    })
+
+    for (const idx in flags.banner) {
+      const jdnaStores = await getJDNAStores({
+        requestId: flags.requestId,
+        banner: flags.banner[idx],
+        storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
+      })
+      const adyenStores = await getAdyenStores({
+        requestId: flags.requestId,
+        merchantId: flags.merchantId[idx],
+        storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
+      })
+
+      logger('commands-sync-stores').info({
+        requestId: flags.requestId,
+        message: 'Completed local sync',
+      })
+
+      if (flags.local) {
+        this.exit(0)
+      }
+      storeIds = await processJDNAStores({
+        requestId: flags.requestId,
+        banner: flags.banner[idx],
+        jdnaStores,
+        adyenStores,
+      })
+    }
 
     logger('commands-sync-stores').info({
       requestId: flags.requestId,
