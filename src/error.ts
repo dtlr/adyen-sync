@@ -32,4 +32,5 @@ type ErrorName =
   | 'ROUTE_FLEET'
   | 'ENV_ERROR'
   | 'PROPERTY_FILE_MISSING'
+  | 'MISSING_MERCHANT_ID'
 export class AppError extends ErrorBase<ErrorName> {}

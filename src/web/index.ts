@@ -7,8 +7,9 @@ import { requestId } from 'hono/request-id'
 import { secureHeaders } from 'hono/secure-headers'
 import apiV2 from './api-v2.js'
 import ui from './ui.jsx'
-import { webLogger } from '@/core/utils.js'
 import { AppError } from '@/error.js'
+import { webLogger } from '@/util/logger.js'
+
 export const app = new Hono()
 
 app.use('*', requestId())

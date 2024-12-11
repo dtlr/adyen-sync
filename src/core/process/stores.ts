@@ -1,41 +1,33 @@
 import * as neonSchema from '@db/neonSchema.js'
 import { drizzle } from 'drizzle-orm/neon-serverless'
-import { type APP_ENVS, JDNAProperty, type JDNAPropertyKey } from '@/constants.js'
-import { logger, parseStoreRef } from '@/core/utils.js'
-import { type InsertInternalStore } from '@/db/neonSchema'
-import { fetchAdyenData } from '@/eapis/adyen'
-import { getLocations } from '@/eapis/jdna'
-import { type AdyenStore } from '@/types/adyen'
+import { type AdyenStore } from 'types/adyen.js'
+import { type APP_ENVS } from '@/constants.js'
+import { fetchAdyenData } from '@/eapis/adyen.js'
+import { getLocations } from '@/eapis/jdna.js'
+import { AppError } from '@/error.js'
+import { parseStoreRef } from '@/util'
+import { logger } from '@/util/logger.js'
 
 export const getJDNAStores = async ({
   requestId,
-  fascia,
+  banner,
   storeEnv,
 }: {
   requestId: string
-  fascia: JDNAPropertyKey | 'all'
+  banner: string
   storeEnv: (typeof APP_ENVS)[number]
 }) => {
   logger('get-jdna-stores').debug({
     requestId,
-    message: `Syncing stores for fascia: ${fascia}`,
+    message: `Syncing stores for banner: ${banner}`,
   })
-  let jdnaStoreData: Awaited<ReturnType<typeof getLocations>>
+  const jdnaStoreData = await getLocations(requestId, storeEnv, banner)
 
-  if (fascia === 'all') {
-    // get all stores
-    const dtlrStores = await getLocations(requestId, storeEnv, 'dtlr')
-    const shoePalaceStores = await getLocations(requestId, storeEnv, 'spc')
-    jdnaStoreData = new Map([...dtlrStores, ...shoePalaceStores])
-  } else {
-    // get stores by fascia
-    jdnaStoreData = await getLocations(requestId, storeEnv, fascia)
-  }
   logger('get-jdna-stores').debug({
     requestId,
     message: `Got stores`,
     extraInfo: {
-      fascia,
+      banner,
       storeEnv,
       stores: Array.from(jdnaStoreData.entries()),
     },
@@ -45,11 +37,11 @@ export const getJDNAStores = async ({
 
 export const getAdyenStores = async ({
   requestId,
-  fascia,
+  merchantId,
   storeEnv,
 }: {
   requestId: string
-  fascia: JDNAPropertyKey | 'all'
+  merchantId: string
   storeEnv: (typeof APP_ENVS)[number]
 }) => {
   const stores = (await fetchAdyenData({
@@ -57,18 +49,20 @@ export const getAdyenStores = async ({
     appEnv: storeEnv,
     opts: {
       type: 'stores',
-      merchantIds: fascia === 'all' ? undefined : JDNAProperty[fascia],
+      merchantIds: merchantId,
     },
   })) as AdyenStore[]
   return stores
 }
 
-export const processStores = async ({
+export const processJDNAStores = async ({
   requestId,
+  banner,
   jdnaStores,
   adyenStores,
 }: {
   requestId: string
+  banner: string
   jdnaStores: Awaited<ReturnType<typeof getJDNAStores>>
   adyenStores: AdyenStore[]
 }) => {
@@ -76,7 +70,7 @@ export const processStores = async ({
     requestId,
     message: `Processing ${jdnaStores.size} stores`,
   })
-  const items: InsertInternalStore[] = []
+  const items: neonSchema.InsertInternalStore[] = []
   const storeIds: string[] = []
 
   for (const [storeId, store] of jdnaStores.entries()) {
@@ -111,36 +105,52 @@ export const processStores = async ({
   // Add other common store processing here
 
   // Commit to the database
-  for (const banner of Object.keys(JDNAProperty)) {
-    const tmp = items.filter((item) => item.banner === banner.toUpperCase())
-    if (tmp.length === 0) {
-      logger('process-jdna-stores').debug({
-        requestId,
-        message: `No stores found for ${banner}`,
-      })
-      continue
-    }
-    const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
-    if (connString) {
-      const db = drizzle(connString, { schema: neonSchema })
-      await db.transaction(async (tx) => {
-        for (const item of tmp) {
-          await tx
-            .insert(neonSchema.stores)
-            .values(item)
-            .onConflictDoUpdate({
-              target: [neonSchema.stores.code],
-              set: item,
-            })
-        }
-      })
-      storeIds.push(...tmp.map((item) => item.code))
-    } else {
-      logger('process-jdna-stores').error({
-        requestId,
-        message: `No database connection string found for ${banner}`,
-      })
-    }
+  const tmp = items.filter((item) => item.banner === banner.toUpperCase())
+  if (tmp.length === 0) {
+    logger('process-jdna-stores').debug({
+      requestId,
+      message: `No stores found for ${banner}`,
+    })
+    return []
+  }
+  const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
+  if (!connString) {
+    throw new AppError({
+      requestId,
+      name: 'DATABASE_CONFIG_MISSING',
+      message: `No database connection string found for ${banner}`,
+    })
+  }
+  logger('process-jdna-stores').debug({
+    requestId,
+    message: `Using database connection string: ${process.env[`${banner.toUpperCase()}_DATABASE_URI`]}`,
+  })
+  try {
+    const db = drizzle(connString, { schema: neonSchema })
+    await db.transaction(async (tx) => {
+      for (const item of tmp) {
+        await tx
+          .insert(neonSchema.stores)
+          .values(item)
+          .onConflictDoUpdate({
+            target: [neonSchema.stores.code],
+            set: item,
+          })
+      }
+    })
+    storeIds.push(...tmp.map((item) => item.code))
+  } catch (error) {
+    logger('process-jdna-stores').error({
+      requestId,
+      message: `Error processing stores for ${banner}`,
+      error,
+    })
+    throw new AppError({
+      requestId,
+      name: 'UPDATE_DATABASE',
+      message: `Error processing stores for ${banner}`,
+      cause: error,
+    })
   }
 
   return storeIds

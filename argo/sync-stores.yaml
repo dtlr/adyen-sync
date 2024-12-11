@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: jdna-sync-stores
 spec:
-  schedule: "0 4,16 * * *"
+  schedule: '0 4,16 * * *'
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
@@ -21,7 +21,7 @@ spec:
             - name: jdna-sync-stores
               image: ghcr.io/dtlr/jdna-sync:edge
               imagePullPolicy: Always
-              args: ["sync", "stores"]
+              args: ['sync', 'stores']
               env:
                 - name: DD_ENV
                   valueFrom:

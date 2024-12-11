@@ -29,10 +29,13 @@ lerna-debug.log*
 node_modules
 **/.env
 dist
-tsconfig.tsbuildinfo
+tmp
+**/*.tsbuildinfo
 
 **/*.out
 **/.terraform/
 **/tfgen_*.yml
 
-tmp/
+# generated
+docs
+oclif.manifest.json

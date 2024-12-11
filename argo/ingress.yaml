@@ -4,7 +4,7 @@ metadata:
   name: jdna-sync
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.tls: 'true'
     cert-manager.io/cluster-issuer: leprod
     external-dns.alpha.kubernetes.io/target: ing.az.msvcs.dtlr.io
 spec:

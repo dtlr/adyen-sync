@@ -1,5 +1,5 @@
 import { Command, Flags, type Interfaces } from '@oclif/core'
-import { APP_ENVS, LOG_LEVELS } from './constants.js'
+import { APP_ENVS, LOG_LEVELS } from '@/constants.js'
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<
   (typeof BaseCommand)['baseFlags'] & T['flags']

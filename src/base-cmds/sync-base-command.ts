@@ -1,7 +1,6 @@
 import { Command, Flags, type Interfaces } from '@oclif/core'
 import { createId } from '@paralleldrive/cuid2'
 import { BaseCommand } from './base-command.js'
-import { JDNAProperty } from './constants.js'
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<
   (typeof SyncBaseCommand)['baseFlags'] & T['flags']
@@ -23,10 +22,16 @@ export abstract class SyncBaseCommand<T extends typeof Command> extends Command 
     banner: Flags.string({
       aliases: ['brand', 'fascia'],
       description: 'The banner to sync',
+      env: 'BANNER',
       char: 'b',
       multiple: false,
-      default: 'all',
-      options: [...Object.keys(JDNAProperty), 'all'] as const,
+      required: true,
+    }),
+    merchantId: Flags.string({
+      description: 'The merchant ID to sync',
+      env: 'MERCHANT_ID',
+      char: 'm',
+      multiple: false,
       required: true,
     }),
     local: Flags.boolean({

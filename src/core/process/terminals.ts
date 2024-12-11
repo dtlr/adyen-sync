@@ -2,30 +2,32 @@ import { fetchAdyenData } from '@eapis/adyen.js'
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { type AdyenTerminal } from 'types/adyen.js'
-import { findDifference, logger } from '../utils.js'
-import { type APP_ENVS, JDNAProperty, type JDNAPropertyKey, POSWRKIDS } from '@/constants.js'
+import { type APP_ENVS, POSWRKIDS } from '@/constants.js'
 import * as jmSchema from '@/db/jmSchema.js'
 import * as neonSchema from '@/db/neonSchema.js'
 import { AppError } from '@/error.js'
-
+import { findDifference } from '@/util/index.js'
+import { logger } from '@/util/logger.js'
 export const getAdyenTerminals = async ({
   requestId,
-  fascia,
+  banner,
+  merchantId,
   storeEnv,
 }: {
   requestId: string
-  fascia: JDNAPropertyKey | 'all'
+  banner: string
+  merchantId: string
   storeEnv: (typeof APP_ENVS)[number]
 }): Promise<AdyenTerminal[]> => {
   logger('get-adyen-terminals').debug({
     requestId,
-    message: `Syncing terminals for fascia: ${fascia}`,
+    message: `Syncing terminals for banner: ${banner}`,
   })
   const terminals = (await fetchAdyenData({
     requestId,
     opts: {
       type: 'terminals',
-      merchantIds: fascia === 'all' ? undefined : JDNAProperty[fascia],
+      merchantIds: merchantId,
     },
     appEnv: storeEnv,
   })) as AdyenTerminal[]
@@ -34,18 +36,18 @@ export const getAdyenTerminals = async ({
 
 export const getJMTerminals = async ({
   requestId,
-  fascia,
+  banner,
   storeEnv,
 }: {
   requestId: string
-  fascia: JDNAPropertyKey | 'all'
+  banner: string
   storeEnv: (typeof APP_ENVS)[number]
 }): Promise<AdyenTerminal[]> => {
   logger('get-jm-terminals').debug({
     requestId,
-    message: `Syncing terminals for fascia: ${fascia}`,
+    message: `Syncing terminals for banner: ${banner}`,
     extraInfo: {
-      fascia,
+      banner,
       storeEnv,
     },
   })
@@ -55,12 +57,14 @@ export const getJMTerminals = async ({
 export const processTerminals = async ({
   requestId,
   adyenTerminals,
-  fascia,
+  banner,
+  merchantId,
   storeEnv,
 }: {
   requestId: string
   adyenTerminals: AdyenTerminal[]
-  fascia: JDNAPropertyKey | 'all'
+  banner: string
+  merchantId: string
   storeEnv: (typeof APP_ENVS)[number]
 }) => {
   logger('process-terminals').debug({
@@ -68,7 +72,7 @@ export const processTerminals = async ({
     message: 'Processing terminals',
     extraInfo: {
       adyenTerminals,
-      fascia,
+      banner,
       storeEnv,
     },
   })
@@ -104,67 +108,67 @@ export const processTerminals = async ({
     })
   }
 
-  for (const banner of Object.keys(JDNAProperty)) {
+  logger('process-terminals').debug({
+    requestId,
+    message: `Processing terminals for ${banner}`,
+    extraInfo: {
+      banner,
+      items,
+    },
+  })
+  const tmp = items.filter((item) => item.merchantId === merchantId)
+  if (tmp.length === 0) {
     logger('process-terminals').debug({
       requestId,
-      message: `Processing terminals for ${banner}`,
+      message: `No terminals found for ${banner}`,
       extraInfo: {
         banner,
-        items,
+        merchantId,
       },
     })
-    const tmp = items.filter((item) => item.merchantId === JDNAProperty[banner])
-    if (tmp.length === 0) {
-      logger('process-terminals').debug({
-        requestId,
-        message: `No terminals found for ${banner}`,
-        extraInfo: {
-          banner,
-          merchantId: JDNAProperty[banner],
-        },
-      })
-      continue
-    }
-    const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
-    if (!connString) {
-      logger('process-terminals').error({
-        requestId,
-        message: `No database connection string found for ${banner}`,
-      })
-      continue
-    }
-    const db = drizzle(connString, { schema: neonSchema })
-    await db.transaction(async (tx) => {
-      for (const item of tmp) {
-        let storeId: string | undefined
-        let businessUnitId: string | undefined
-        if (item.adyenStoreId) {
-          const result = await tx
-            .select({ id: neonSchema.stores.id, businessUnitId: neonSchema.stores.aptosStoreCode })
-            .from(neonSchema.stores)
-            .where(eq(neonSchema.stores.adyenId, item.adyenStoreId))
-          if (result && result.length > 0) {
-            storeId = result[0].id
-            businessUnitId = result[0].businessUnitId
-          }
-        }
-        await tx
-          .insert(neonSchema.terminals)
-          .values({ ...item, storeId })
-          .onConflictDoUpdate({
-            target: [neonSchema.terminals.serialNumber],
-            set: { ...item, storeId },
-          })
-        terminals.push({
-          name: item.name,
-          banner: Object.keys(JDNAProperty)
-            .find((key) => JDNAProperty[key] === item.merchantId)!
-            .toUpperCase(),
-          businessUnitId: businessUnitId ?? null,
-        })
-      }
+    return []
+  }
+  const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
+  if (!connString) {
+    logger('process-terminals').error({
+      requestId,
+      message: `No database connection string found for ${banner}`,
+    })
+    throw new AppError({
+      name: 'DATABASE_CONFIG_MISSING',
+      requestId,
+      message: `No database connection string found for ${banner}`,
     })
   }
+  const db = drizzle(connString, { schema: neonSchema })
+  await db.transaction(async (tx) => {
+    for (const item of tmp) {
+      let storeId: string | undefined
+      let businessUnitId: string | undefined
+      if (item.adyenStoreId) {
+        const result = await tx
+          .select({ id: neonSchema.stores.id, businessUnitId: neonSchema.stores.aptosStoreCode })
+          .from(neonSchema.stores)
+          .where(eq(neonSchema.stores.adyenId, item.adyenStoreId))
+        if (result && result.length > 0) {
+          storeId = result[0].id
+          businessUnitId = result[0].businessUnitId
+        }
+      }
+      await tx
+        .insert(neonSchema.terminals)
+        .values({ ...item, storeId })
+        .onConflictDoUpdate({
+          target: [neonSchema.terminals.serialNumber],
+          set: { ...item, storeId },
+        })
+      terminals.push({
+        name: item.name,
+        banner: banner.toUpperCase(),
+        businessUnitId: businessUnitId ?? null,
+      })
+    }
+  })
   return terminals
 }
 
@@ -192,6 +196,7 @@ export const updateJMDatabase = async ({
   let logItem: unknown
   const envInitial = appEnv.toLowerCase() === 'live' ? 'p' : 'q'
   const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env
+  const banner = data[0].banner
 
   const dtlrDb = drizzle({
     connection: `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT ?? 5432}/dtlr-${appEnv.toLowerCase() === 'live' ? 'prod' : 'qa'}`,
@@ -199,236 +204,230 @@ export const updateJMDatabase = async ({
     casing: 'snake_case',
   })
 
-  for (const banner of Object.keys(JDNAProperty)) {
-    const bannerDb = drizzle({
-      connection: `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT ?? 5432}/${banner.toLowerCase()}-${appEnv.toLowerCase() === 'live' ? 'prod' : 'qa'}`,
-      schema: jmSchema,
-      casing: 'snake_case',
+  const bannerDb = drizzle({
+    connection: `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT ?? 5432}/${banner.toLowerCase()}-${appEnv.toLowerCase() === 'live' ? 'prod' : 'qa'}`,
+    schema: jmSchema,
+    casing: 'snake_case',
+  })
+
+  if (data.length === 0) {
+    logger('update-jm-database').debug({
+      requestId,
+      message: `No terminals found for ${banner}`,
     })
+    return []
+  }
 
-    const bannerData = data.filter(
-      (item) => item.banner.toLowerCase() === banner.toLowerCase() && item.businessUnitId,
-    )
+  try {
+    let existingWorkstationIds: string[] = []
+    for (const item of data) {
+      logItem = item
 
-    if (bannerData.length === 0) {
-      logger('update-jm-database').debug({
+      logger('terminals-update-jm').info({ message: `Processing ${item}`, requestId, item })
+      const bannerInitial = banner.charAt(0).toLowerCase()
+      let deviceId: string
+
+      // Gather existing workstations for the business unit
+      const dbExistingWorkstations = await dtlrDb
+        .select({ deviceId: jmSchema.devDevicePersonalization.deviceId })
+        .from(jmSchema.devDevicePersonalization)
+        .where(eq(jmSchema.devDevicePersonalization.businessUnitId, item.businessUnitId))
+      logger('terminals-update-jm').info({
+        message: `Found workstations for ${item}`,
         requestId,
-        message: `No terminals found for ${banner}`,
+        dbExistingWorkstations,
       })
-      continue
-    }
 
-    try {
-      let existingWorkstationIds: string[] = []
-      for (const item of bannerData) {
-        logItem = item
+      if (dbExistingWorkstations.length > 0)
+        existingWorkstationIds = dbExistingWorkstations.map(
+          (workstation) => workstation.deviceId!.split('-')[1]!,
+        )
+      logger('terminals-update-jm').info({
+        message: `Existing workstation ids for ${item}`,
+        requestId,
+        existingWorkstationIds,
+      })
 
-        logger('terminals-update-jm').info({ message: `Processing ${item}`, requestId, item })
-        const bannerInitial = banner.charAt(0).toLowerCase()
-        let deviceId: string
+      // Check if record exists in dev_device_personalization table by serial
+      const existingDDP = await dtlrDb
+        .select()
+        .from(jmSchema.devDevicePersonalization)
+        .where(eq(jmSchema.devDevicePersonalization.deviceName, item.name))
+        .limit(1)
 
-        // Gather existing workstations for the business unit
-        const dbExistingWorkstations = await dtlrDb
-          .select({ deviceId: jmSchema.devDevicePersonalization.deviceId })
-          .from(jmSchema.devDevicePersonalization)
-          .where(eq(jmSchema.devDevicePersonalization.businessUnitId, item.businessUnitId))
+      if (existingDDP.length > 0) {
         logger('terminals-update-jm').info({
-          message: `Found workstations for ${item}`,
+          message: `Existing record found for ${item}`,
           requestId,
-          dbExistingWorkstations,
+          item,
+        })
+        deviceId = existingDDP[0]!.deviceId!
+      } else {
+        logger('terminals-update-jm').info({
+          message: `Existing record not found for ${item}`,
+          requestId,
+          item: item.name,
         })
 
-        if (dbExistingWorkstations.length > 0)
-          existingWorkstationIds = dbExistingWorkstations.map(
-            (workstation) => workstation.deviceId!.split('-')[1]!,
-          )
-        logger('terminals-update-jm').info({
-          message: `Existing workstation ids for ${item}`,
-          requestId,
+        const availableWorkstationIds = findDifference(
+          POSWRKIDS.map((i) => i.padStart(3, '0')),
           existingWorkstationIds,
+        )
+        logger('terminals-update-jm').info({
+          message: `Available workstation ids for ${item}`,
+          requestId,
+          availableWorkstationIds,
         })
 
-        // Check if record exists in dev_device_personalization table by serial
-        const existingDDP = await dtlrDb
-          .select()
-          .from(jmSchema.devDevicePersonalization)
-          .where(eq(jmSchema.devDevicePersonalization.deviceName, item.name))
-          .limit(1)
+        const newWorkstationId = availableWorkstationIds[0]?.padStart(3, '0')
+        if (!newWorkstationId) throw new Error('No new workstation ID found')
 
-        if (existingDDP.length > 0) {
-          logger('terminals-update-jm').info({
-            message: `Existing record found for ${item}`,
-            requestId,
-            item,
-          })
-          deviceId = existingDDP[0]!.deviceId!
-        } else {
-          logger('terminals-update-jm').info({
-            message: `Existing record not found for ${item}`,
-            requestId,
-            item: item.name,
-          })
+        deviceId = `${item.businessUnitId}-${newWorkstationId}`
+        logger('terminals-update-jm').info({
+          message: `New computed device id for ${item}`,
+          requestId,
+          deviceId,
+        })
+      }
 
-          const availableWorkstationIds = findDifference(
-            POSWRKIDS.map((i) => i.padStart(3, '0')),
-            existingWorkstationIds,
-          )
-          logger('terminals-update-jm').info({
-            message: `Available workstation ids for ${item}`,
-            requestId,
-            availableWorkstationIds,
-          })
+      await dtlrDb.transaction(async (tx) => {
+        logger('terminals-update-jm').info({
+          message: `Preparing to update dev_device_personalization for ${item}`,
+          requestId,
+          deviceId,
+        })
 
-          const newWorkstationId = availableWorkstationIds[0]?.padStart(3, '0')
-          if (!newWorkstationId) throw new Error('No new workstation ID found')
-
-          deviceId = `${item.businessUnitId}-${newWorkstationId}`
-          logger('terminals-update-jm').info({
-            message: `New computed device id for ${item}`,
-            requestId,
+        // Update dev_device_personalization
+        await tx
+          .insert(jmSchema.devDevicePersonalization)
+          .values({
+            deviceName: item.name,
+            serverUrl: `https://${bannerInitial}m${envInitial}.jdna.io`,
+            appId: 'pos',
             deviceId,
+            businessUnitId: item.businessUnitId,
+            tagBusinessUnitId: item.businessUnitId,
           })
-        }
-
-        await dtlrDb.transaction(async (tx) => {
-          logger('terminals-update-jm').info({
-            message: `Preparing to update dev_device_personalization for ${item}`,
-            requestId,
-            deviceId,
-          })
-
-          // Update dev_device_personalization
-          await tx
-            .insert(jmSchema.devDevicePersonalization)
-            .values({
-              deviceName: item.name,
+          .onConflictDoUpdate({
+            target: [
+              jmSchema.devDevicePersonalization.deviceName,
+              jmSchema.devDevicePersonalization.tagAppId,
+              jmSchema.devDevicePersonalization.tagBusinessUnitId,
+              jmSchema.devDevicePersonalization.tagBrand,
+              jmSchema.devDevicePersonalization.tagStoreType,
+              jmSchema.devDevicePersonalization.tagDeviceType,
+              jmSchema.devDevicePersonalization.tagDeviceId,
+              jmSchema.devDevicePersonalization.tagCountry,
+              jmSchema.devDevicePersonalization.tagState,
+            ],
+            set: {
               serverUrl: `https://${bannerInitial}m${envInitial}.jdna.io`,
-              appId: 'pos',
               deviceId,
               businessUnitId: item.businessUnitId,
               tagBusinessUnitId: item.businessUnitId,
-            })
-            .onConflictDoUpdate({
-              target: [
-                jmSchema.devDevicePersonalization.deviceName,
-                jmSchema.devDevicePersonalization.tagAppId,
-                jmSchema.devDevicePersonalization.tagBusinessUnitId,
-                jmSchema.devDevicePersonalization.tagBrand,
-                jmSchema.devDevicePersonalization.tagStoreType,
-                jmSchema.devDevicePersonalization.tagDeviceType,
-                jmSchema.devDevicePersonalization.tagDeviceId,
-                jmSchema.devDevicePersonalization.tagCountry,
-                jmSchema.devDevicePersonalization.tagState,
-              ],
-              set: {
-                serverUrl: `https://${bannerInitial}m${envInitial}.jdna.io`,
-                deviceId,
-                businessUnitId: item.businessUnitId,
-                tagBusinessUnitId: item.businessUnitId,
-              },
-            })
-          logger('terminals-update-jm').info({
-            message: `dev_device_personalization table updated for ${item}`,
-            requestId,
-            existingDDP,
-            item,
-          })
-        })
-
-        // Using a transaction
-        await bannerDb.transaction(async (tx) => {
-          logger('terminals-update-jm').info({
-            message: `Preparing to update pay_payment_devices for ${item}`,
-            requestId,
-            deviceId,
-          })
-
-          // Update pay_payment_devices
-          await tx
-            .insert(jmSchema.payPaymentDevices)
-            .values({
-              id: deviceId + '-pay',
-              businessUnitId: item.businessUnitId,
-              configName: 'terminal1',
-              displayName: `Terminal ${deviceId}`,
-              terminalId: item.name,
-              displayOrder: 0,
-            })
-            .onConflictDoUpdate({
-              target: [jmSchema.payPaymentDevices.id, jmSchema.payPaymentDevices.businessUnitId],
-              set: {
-                id: deviceId + '-pay',
-                businessUnitId: item.businessUnitId,
-                displayName: `Terminal ${deviceId}`,
-                terminalId: item.name,
-              },
-            })
-          logger('terminals-update-jm').info({
-            message: `pay_payment_devices table updated for ${item}`,
-            requestId,
-            item,
-            data: {
-              id: deviceId + '-pay',
-              businessUnitId: item.businessUnitId,
-              configName: 'terminal1',
-              displayName: `Terminal ${deviceId}`,
-              terminalId: item.name,
-              displayOrder: 0,
             },
           })
-          // Update pay_assigned_payment_device
-          logger('terminals-update-jm').info({
-            message: `Preparing to update pay_assigned_payment_device for ${item}`,
-            requestId,
-            deviceId,
-          })
-          await tx
-            .insert(jmSchema.payAssignedPaymentDevice)
-            .values({
-              deviceId,
-              businessUnitId: item.businessUnitId,
-              paymentDeviceId: deviceId + '-pay',
-              permanentFlag: 1,
-            })
-            .onConflictDoUpdate({
-              target: [
-                jmSchema.payAssignedPaymentDevice.deviceId,
-                jmSchema.payAssignedPaymentDevice.businessUnitId,
-              ],
-              set: {
-                businessUnitId: item.businessUnitId,
-                paymentDeviceId: deviceId + '-pay',
-                permanentFlag: 1,
-              },
-            })
-          logger('terminals-update-jm').info({
-            message: `pay_assigned_payment_device table updated for ${item}`,
-            requestId,
-            item,
-            data: {
-              deviceId,
-              businessUnitId: item.businessUnitId,
-              paymentDeviceId: deviceId + '-pay',
-              permanentFlag: 1,
-            },
-          })
-        })
         logger('terminals-update-jm').info({
-          message: `Successfully updated ${bannerData.length} records`,
+          message: `dev_device_personalization table updated for ${item}`,
           requestId,
-          items: bannerData,
+          existingDDP,
+          item,
         })
-      }
-    } catch (error) {
-      throw new AppError({
-        name: 'UPDATE_DATABASE',
+      })
+
+      // Using a transaction
+      await bannerDb.transaction(async (tx) => {
+        logger('terminals-update-jm').info({
+          message: `Preparing to update pay_payment_devices for ${item}`,
+          requestId,
+          deviceId,
+        })
+
+        // Update pay_payment_devices
+        await tx
+          .insert(jmSchema.payPaymentDevices)
+          .values({
+            id: deviceId + '-pay',
+            businessUnitId: item.businessUnitId,
+            configName: 'terminal1',
+            displayName: `Terminal ${deviceId}`,
+            terminalId: item.name,
+            displayOrder: 0,
+          })
+          .onConflictDoUpdate({
+            target: [jmSchema.payPaymentDevices.id, jmSchema.payPaymentDevices.businessUnitId],
+            set: {
+              id: deviceId + '-pay',
+              businessUnitId: item.businessUnitId,
+              displayName: `Terminal ${deviceId}`,
+              terminalId: item.name,
+            },
+          })
+        logger('terminals-update-jm').info({
+          message: `pay_payment_devices table updated for ${item}`,
+          requestId,
+          item,
+          data: {
+            id: deviceId + '-pay',
+            businessUnitId: item.businessUnitId,
+            configName: 'terminal1',
+            displayName: `Terminal ${deviceId}`,
+            terminalId: item.name,
+            displayOrder: 0,
+          },
+        })
+        // Update pay_assigned_payment_device
+        logger('terminals-update-jm').info({
+          message: `Preparing to update pay_assigned_payment_device for ${item}`,
+          requestId,
+          deviceId,
+        })
+        await tx
+          .insert(jmSchema.payAssignedPaymentDevice)
+          .values({
+            deviceId,
+            businessUnitId: item.businessUnitId,
+            paymentDeviceId: deviceId + '-pay',
+            permanentFlag: 1,
+          })
+          .onConflictDoUpdate({
+            target: [
+              jmSchema.payAssignedPaymentDevice.deviceId,
+              jmSchema.payAssignedPaymentDevice.businessUnitId,
+            ],
+            set: {
+              businessUnitId: item.businessUnitId,
+              paymentDeviceId: deviceId + '-pay',
+              permanentFlag: 1,
+            },
+          })
+        logger('terminals-update-jm').info({
+          message: `pay_assigned_payment_device table updated for ${item}`,
+          requestId,
+          item,
+          data: {
+            deviceId,
+            businessUnitId: item.businessUnitId,
+            paymentDeviceId: deviceId + '-pay',
+            permanentFlag: 1,
+          },
+        })
+      })
+      logger('terminals-update-jm').info({
+        message: `Successfully updated ${data.length} records`,
         requestId,
-        message: 'Error updating JM database',
-        cause: {
-          currentItem: logItem,
-          error,
-        },
+        items: data,
       })
     }
+  } catch (error) {
+    throw new AppError({
+      name: 'UPDATE_DATABASE',
+      requestId,
+      message: 'Error updating JM database',
+      cause: {
+        currentItem: logItem,
+        error,
+      },
+    })
   }
 }

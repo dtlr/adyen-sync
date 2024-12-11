@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: jdna-sync-terminals
 spec:
-  schedule: "0 * * * *"
+  schedule: '0 * * * *'
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
@@ -21,7 +21,7 @@ spec:
             - name: jdna-sync-terminals
               image: ghcr.io/dtlr/jdna-sync:edge
               imagePullPolicy: Always
-              args: ["sync", "terminals"]
+              args: ['sync', 'terminals']
               env:
                 - name: DD_ENV
                   valueFrom:

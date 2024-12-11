@@ -5,11 +5,6 @@
     "types": ["vite/client"],
     "noEmit": true
   },
-  "references": [
-    {
-      "path": ".."
-    }
-  ],
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

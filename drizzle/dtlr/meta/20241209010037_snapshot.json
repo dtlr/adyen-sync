@@ -174,9 +174,7 @@
         "stores_code_unique": {
           "name": "stores_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},

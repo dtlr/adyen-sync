@@ -1,7 +1,7 @@
-import { type APP_ENVS, type JDNAPropertyKey } from '@/constants'
-import { getAdyenStores, getJDNAStores, processStores } from '@/core/process/stores'
-import { logger } from '@/core/utils'
-import { SyncBaseCommand } from '@/sync-base-command.js'
+import { SyncBaseCommand } from '@/base-cmds/sync-base-command.js'
+import { type APP_ENVS } from '@/constants.js'
+import { getAdyenStores, getJDNAStores, processJDNAStores } from '@/core/process/stores.js'
+import { logger } from '@/util/logger.js'
 
 export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand> {
   static description = 'Sync stores'
@@ -20,12 +20,12 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
     })
     const jdnaStores = await getJDNAStores({
       requestId: flags.requestId,
-      fascia: flags.banner as JDNAPropertyKey | 'all',
+      banner: flags.banner,
       storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
     })
     const adyenStores = await getAdyenStores({
       requestId: flags.requestId,
-      fascia: flags.banner as JDNAPropertyKey | 'all',
+      merchantId: flags.merchantId,
       storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
     })
 
@@ -37,8 +37,9 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
     if (flags.local) {
       process.exit(0)
     }
-    const storeIds = await processStores({
+    const storeIds = await processJDNAStores({
       requestId: flags.requestId,
+      banner: flags.banner,
       jdnaStores,
       adyenStores,
     })

@@ -174,9 +174,7 @@
         "stores_code_unique": {
           "name": "stores_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -346,9 +344,7 @@
         "terminals_serial_number_unique": {
           "name": "terminals_serial_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "serial_number"
-          ]
+          "columns": ["serial_number"]
         }
       },
       "policies": {},

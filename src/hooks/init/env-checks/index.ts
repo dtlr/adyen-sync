@@ -1,6 +1,6 @@
 import { type Hook } from '@oclif/core'
-import { logger } from '@/core/utils'
 import { AppError } from '@/error.js'
+import { logger } from '@/util/logger.js'
 import 'dotenv/config'
 
 const checkEnv: Hook<'init'> = async function () {

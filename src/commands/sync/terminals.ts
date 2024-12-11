@@ -1,7 +1,7 @@
-import { type APP_ENVS, type JDNAPropertyKey } from '@/constants'
-import { getAdyenTerminals, processTerminals, updateJMDatabase } from '@/core/process/terminals'
-import { logger } from '@/core/utils'
-import { SyncBaseCommand } from '@/sync-base-command.js'
+import { SyncBaseCommand } from '@/base-cmds/sync-base-command.js'
+import { type APP_ENVS } from '@/constants.js'
+import { getAdyenTerminals, processTerminals, updateJMDatabase } from '@/core/process/terminals.js'
+import { logger } from '@/util/logger.js'
 
 export class SyncTerminalsCommand extends SyncBaseCommand<typeof SyncTerminalsCommand> {
   static description = 'Sync terminals'
@@ -20,13 +20,15 @@ export class SyncTerminalsCommand extends SyncBaseCommand<typeof SyncTerminalsCo
     })
     const adyenTerminals = await getAdyenTerminals({
       requestId: flags.requestId,
-      fascia: flags.banner as JDNAPropertyKey | 'all',
+      banner: flags.banner,
+      merchantId: flags.merchantId,
       storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
     })
     const terminals = await processTerminals({
       requestId: flags.requestId,
       adyenTerminals,
-      fascia: flags.banner as JDNAPropertyKey | 'all',
+      banner: flags.banner,
+      merchantId: flags.merchantId,
       storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
     })
     logger('commands-sync-terminals').info({
