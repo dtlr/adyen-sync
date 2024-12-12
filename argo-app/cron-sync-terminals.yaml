@@ -41,10 +41,6 @@ spec:
                   value: some-value
                 - name: APP_BANNER_MERCHANT_ID
                   value: some-value
-                - name: APP_ENV
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.labels['env']
                 - name: DB_USER
                   valueFrom:
                     secretKeyRef:

@@ -104,6 +104,18 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /metadata/name
+                  value: jdna-pull-secret-${each.key}-${local.app_env}
+
+                EOT
+                target = {
+                  kind = "OnePasswordItem"
+                  name = "jdna-pull-secret"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /metadata/name
                   value: ${local.app_name}-${each.key}-${local.app_env}
 
                 EOT
@@ -164,7 +176,115 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/template/spec/containers/0/env/5/valueFrom/secretKeyRef/name
-                  value: "${local.app_secret_name}-${each.key}-${local.app_env}"
+                  value: "${local.app_name}-${each.key}-${local.app_env}-banner"
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/6/value
+                  value: ${each.key}
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/7/value
+                  value: ${each.value}
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/8/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/9/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/10/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/11/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/12/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/13/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/14/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
 
                 EOT
                 target = {
@@ -297,6 +417,102 @@ resource "kubernetes_manifest" "argo_app" {
               {
                 patch = <<-EOT
                 - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/7/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/8/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/9/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/10/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/11/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/12/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/13/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/14/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
                   path: /metadata/name
                   value: "${local.app_name}-${each.key}-${local.app_env}-terminals-cronjob"
 
@@ -323,6 +539,102 @@ resource "kubernetes_manifest" "argo_app" {
                 - op: replace
                   path: /spec/jobTemplate/spec/template/spec/containers/0/env/6/value
                   value: ${each.value}
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/7/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/8/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/9/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/10/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/11/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/12/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/13/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/14/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
 
                 EOT
                 target = {
