@@ -73,6 +73,18 @@ export const adyenTerminalResponseSchema = z.object({
 export type AdyenTerminalsResponse = z.infer<typeof adyenTerminalResponseSchema>
 export type AdyenTerminal = z.infer<typeof adyenTerminalResponseSchema>['data'][number]
 
+const adyenAddressSchema = z.object({
+  city: z.string(),
+  line1: z.string(),
+  line2: z.string().optional(),
+  line3: z.string().optional(),
+  postalCode: z.string(),
+  stateOrProvince: z.string(),
+  country: z.string(),
+})
+
+export type AdyenAddress = z.infer<typeof adyenAddressSchema>
+
 export const adyenStoresResponseSchema = z.object({
   _links: adyenLinksSchema,
   itemsTotal: z.number(),
@@ -85,15 +97,7 @@ export const adyenStoresResponseSchema = z.object({
       status: z.string(),
       merchantId: z.string(),
       phoneNumber: z.string(),
-      address: z.object({
-        city: z.string(),
-        line1: z.string(),
-        line2: z.string(),
-        line3: z.string(),
-        postalCode: z.string(),
-        stateOrProvince: z.string(),
-        country: z.string(),
-      }),
+      address: adyenAddressSchema,
       _links: adyenLinksSchema.pick({ self: true }),
     }),
   ),
@@ -114,15 +118,7 @@ export const adyenTerminalBoardWebhook = z.object({
 })
 
 export const adyenStoreCreateSchema = z.object({
-  address: z.object({
-    country: z.string(),
-    line1: z.string(),
-    line2: z.string(),
-    line3: z.string().optional(),
-    city: z.string(),
-    stateOrProvince: z.string(),
-    postalCode: z.string(),
-  }),
+  address: adyenAddressSchema,
   description: z.string(),
   merchantId: z.string(),
   shopperStatement: z.string(),
@@ -130,6 +126,12 @@ export const adyenStoreCreateSchema = z.object({
   reference: z.string(),
 })
 export type AdyenStoreCreate = z.infer<typeof adyenStoreCreateSchema>
+export type AdyenStoreUpdate = Omit<
+  AdyenStoreCreate,
+  'address' | 'reference' | 'merchantId' | 'shopperStatement'
+> & {
+  address: Omit<AdyenAddress, 'country'>
+}
 
 export const adyenStoresReturnSchema = z.object({
   _links: z.object({
@@ -150,13 +152,7 @@ export const adyenStoresReturnSchema = z.object({
   pagesTotal: z.number(),
   data: z.array(
     z.object({
-      address: z.object({
-        city: z.string(),
-        line1: z.string(),
-        postalCode: z.string(),
-        stateOrProvince: z.string(),
-        country: z.string(),
-      }),
+      address: adyenAddressSchema,
       description: z.string(),
       externalReferenceId: z.string(),
       merchantId: z.string(),

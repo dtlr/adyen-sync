@@ -6,7 +6,7 @@ import { parseStoreRef } from '@util'
 import { logger } from '@util/logger.js'
 import { AxiosError } from 'axios'
 import { eq } from 'drizzle-orm'
-import { type AdyenStoreCreate, type AdyenStore } from 'types/adyen.js'
+import { type AdyenStoreCreate, type AdyenStore, type AdyenStoreUpdate } from 'types/adyen.js'
 import { type APP_ENVS } from '@/constants.js'
 import { AppError } from '@/error.js'
 import 'dotenv/config'
@@ -194,7 +194,7 @@ export const processAdyenStores = async ({
     })
   }
   let currentItem: neonSchema.SelectInternalStore | undefined
-  let currentItemParsed: AdyenStoreCreate | undefined
+  let currentItemParsed: AdyenStoreCreate | AdyenStoreUpdate | undefined
   try {
     const db = neonDb(APP_NEON_DATABASE_URI, { schema: neonSchema })
     const stores = await db.select().from(neonSchema.stores)
@@ -228,9 +228,10 @@ export const processAdyenStores = async ({
             storeId: store.adyenId,
           },
         })
-        const { address, ...rest } = adyenStore
+        const { address, reference, merchantId, shopperStatement, ...rest } = adyenStore
         const { country, ...restAddress } = address
         const updatedStore = { ...rest, address: restAddress }
+        currentItemParsed = updatedStore
         await updateAdyenStore(appEnv, store.adyenId, updatedStore)
       } else if (!store.adyenId && store.status) {
         logger('process-adyen-stores').info({
