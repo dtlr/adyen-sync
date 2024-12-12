@@ -89,7 +89,9 @@ resource "kubernetes_manifest" "argo_app" {
           targetRevision = terraform.workspace
           kustomize = {
             commonLabels = {
+              app                                            = "${local.app_name}-${each.key}-${local.app_env}"
               env                                            = local.app_env
+              banner                                         = each.key
               "tags.datadoghq.com/${local.app_name}.env"     = local.app_env
               "tags.datadoghq.com/${local.app_name}.service" = local.app_name
             }
@@ -163,30 +165,6 @@ resource "kubernetes_manifest" "argo_app" {
                 - op: replace
                   path: /spec/template/spec/containers/0/env/5/valueFrom/secretKeyRef/name
                   value: "${local.app_secret_name}-${each.key}-${local.app_env}"
-
-                EOT
-                target = {
-                  kind = "Deployment"
-                  name = "app-deployment"
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/template/spec/containers/0/env/6/valueFrom/secretKeyRef/name
-                  value: ${each.key}
-
-                EOT
-                target = {
-                  kind = "Deployment"
-                  name = "app-deployment"
-                }
-              },
-              {
-                patch = <<-EOT
-                - op: replace
-                  path: /spec/template/spec/containers/0/env/7/valueFrom/secretKeyRef/name
-                  value: ${each.value}
 
                 EOT
                 target = {
