@@ -20,7 +20,7 @@ jobs:
   env-setup:
     runs-on: ubuntu-latest
     outputs:
-      banners: ${{ steps.read-property.outputs.banners }}
+      banners: ${{ steps.read-property.outputs.result }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -70,6 +70,7 @@ jobs:
         with:
           export-env: false
         env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           CONNECT_TOKEN: op://Engineering/jrurekjt6arylw3fnmwy53rkwu/credential
           NEON_API_KEY: op://Engineering/lus42zxvxdkmb6ln5cjcll7qnm/api_key
           NEON_ORG_ID: op://Engineering/lus42zxvxdkmb6ln5cjcll7qnm/dtlr_org_id
