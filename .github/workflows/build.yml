@@ -20,7 +20,7 @@ jobs:
   env-setup:
     runs-on: ubuntu-latest
     outputs:
-      banners: ${{ steps.read-property.outputs.banners }}
+      banners: ${{ steps.read-property.outputs }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,7 +41,7 @@ jobs:
             const fs = require('fs')
             const propertyData = JSON.parse(fs.readFileSync('./property.json', 'utf8'))
             const banners = Object.keys(propertyData)
-            return { banners}
+            return { banners }
 
   app-setup:
     if:
