@@ -10,8 +10,8 @@ spec:
   template:
     spec:
       containers:
-        - name: appName
-          image: ghcr.io/dtlr/appName:edge
+        - name: jdna-sync
+          image: ghcr.io/dtlr/jdna-sync:edge
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

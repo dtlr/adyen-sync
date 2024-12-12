@@ -58,7 +58,7 @@ locals {
   app_secret_name = "app-secret"
   banners         = keys(jsondecode(file("${path.module}/../property.json")))
 
-  appset = yamlencode(templatefile("${path.module}/argo/appset.tftpl", {
+  appset = yamldecode(templatefile("${path.module}/argo/appset.tftpl", {
     app_name          = local.app_name
     env               = terraform.workspace == "main" ? "live" : "test"
     dest_cluster_name = data.terraform_remote_state.app_0.outputs.argo_details.destination
@@ -73,27 +73,14 @@ locals {
     app_secret_name   = "${local.app_secret_name}-${terraform.workspace == "main" ? "live" : "test"}"
   }))
 
-  appset_json = jsonencode(yamldecode(local.appset))
+  appset_json = jsonencode(local.appset)
 }
 
 resource "local_file" "argo_appset" {
-  content  = yamldecode(local.appset)
+  content  = local.appset_json
   filename = "${path.module}/argo/appset.yaml"
 }
 
 # resource "kubernetes_manifest" "argo_appset" {
-#   manifest = provider::kubernetes::manifest_decode(yamlencode(templatefile("${path.module}/argo/appset.tftpl", {
-#     app_name          = local.app_name
-#     env               = terraform.workspace == "main" ? "live" : "test"
-#     dest_cluster_name = "${local.app_name}-${terraform.workspace == "main" ? "live" : "test"}"
-#     dest_cluster_ns   = data.terraform_remote_state.app_0.outputs.namespace
-#     project_name      = local.app_name
-#     list_elements     = yamlencode([for banner in local.banners : { "banner" = banner }])
-#     repo_url          = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
-#     target_revision   = terraform.workspace
-#     image_registry    = var.image_registry
-#     image_name        = local.app_name
-#     image_tag         = var.image_tags[terraform.workspace]
-#     app_secret_name   = "${local.app_secret_name}-${terraform.workspace == "main" ? "live" : "test"}"
-#   })))
+#   manifest = provider::kubernetes::manifest_decode(local.appset_json)
 # }
