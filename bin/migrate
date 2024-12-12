@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# Check for APP_BANNER
+if [ -z "$APP_BANNER" ]; then
+    echo "APP_BANNER is not set"
+    read -p "Enter the banner name: " APP_BANNER
+    export APP_BANNER
+fi
+
+# Get database URI from 1password
+if [ -z "$APP_NEON_DATABASE_URI" ]; then
+    echo "Fetching database URI from 1password..."
+    export APP_NEON_DATABASE_URI=$(op read "op://Engineering/jdna-sync-$APP_BANNER-$APP_ENV/connection_string")
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to fetch database URI from 1password"
+        exit 1
+    fi
+fi
+
+# Execute dev.js with all passed arguments
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+node --loader ts-node/esm --no-warnings=ExperimentalWarning "$DIR/../scripts/migrate.js" "$@"
