@@ -1,5 +1,6 @@
 import { migrateDb } from '@core/migrate'
-import { getAdyenTerminals, processTerminals, updateJMDatabase } from '@core/process/terminals.js'
+import { processTerminals, updateJMDatabase } from '@core/process/terminals.js'
+import { getAdyenTerminals } from '@eapis/adyen'
 import { logger } from '@util/logger.js'
 import { SyncBaseCommand } from '@/base-cmds/sync-base-command.js'
 import { type APP_ENVS } from '@/constants.js'
@@ -32,9 +33,10 @@ export class SyncTerminalsCommand extends SyncBaseCommand<typeof SyncTerminalsCo
 
       const adyenTerminals = await getAdyenTerminals({
         requestId: flags.requestId,
-        banner: flags.banner[idx],
-        merchantId: flags.merchantId[idx],
-        storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
+        opts: {
+          merchantIds: flags.merchantId[idx],
+        },
+        appEnv: flags['app-env'] as (typeof APP_ENVS)[number],
       })
       const terminals = await processTerminals({
         requestId: flags.requestId,

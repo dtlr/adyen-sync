@@ -1,5 +1,6 @@
 import { migrateDb } from '@core/migrate'
-import { getAdyenStores, getJDNAStores, processJDNAStores } from '@core/process/stores.js'
+import { getJDNAStores, processAdyenStores, processJDNAStores } from '@core/process/stores.js'
+import { getAdyenStores } from '@eapis/adyen.js'
 import { logger } from '@util/logger.js'
 import { SyncBaseCommand } from '@/base-cmds/sync-base-command.js'
 import { type APP_ENVS } from '@/constants.js'
@@ -50,10 +51,11 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
       })
       const adyenStores = await getAdyenStores({
         requestId: flags.requestId,
-        merchantId: flags.merchantId[idx],
-        storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
+        appEnv: flags['app-env'] as (typeof APP_ENVS)[number],
+        opts: {
+          merchantIds: flags.merchantId[idx],
+        },
       })
-
       logger('commands-sync-stores').info({
         requestId: flags.requestId,
         message: 'Completed local sync',
@@ -69,6 +71,13 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
       if (flags.local) {
         process.exit(0)
       }
+
+      await processAdyenStores({
+        requestId: flags.requestId,
+        banner: flags.banner[idx],
+        merchantId: flags.merchantId[idx],
+        appEnv: flags['app-env'] as (typeof APP_ENVS)[number],
+      })
     }
 
     logger('commands-sync-stores').info({

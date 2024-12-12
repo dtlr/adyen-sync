@@ -1,7 +1,6 @@
 import { jmDb, neonDb } from '@core/db'
 import * as jmSchema from '@db/jmSchema.js'
 import * as neonSchema from '@db/neonSchema.js'
-import { fetchAdyenData } from '@eapis/adyen.js'
 import { findDifference } from '@util/index.js'
 import { logger } from '@util/logger.js'
 import { eq } from 'drizzle-orm'
@@ -9,32 +8,6 @@ import { type AdyenTerminal } from 'types/adyen.js'
 import { type APP_ENVS, POSWRKIDS } from '@/constants.js'
 import { AppError } from '@/error.js'
 import 'dotenv/config'
-
-export const getAdyenTerminals = async ({
-  requestId,
-  banner,
-  merchantId,
-  storeEnv,
-}: {
-  requestId: string
-  banner: string
-  merchantId: string
-  storeEnv: (typeof APP_ENVS)[number]
-}): Promise<AdyenTerminal[]> => {
-  logger('get-adyen-terminals').debug({
-    requestId,
-    message: `Syncing terminals for banner: ${banner}`,
-  })
-  const terminals = (await fetchAdyenData({
-    requestId,
-    opts: {
-      type: 'terminals',
-      merchantIds: merchantId,
-    },
-    appEnv: storeEnv,
-  })) as AdyenTerminal[]
-  return terminals
-}
 
 export const getJMTerminals = async ({
   requestId,
@@ -199,7 +172,7 @@ export const updateJMDatabase = async ({
   const envInitial = appEnv.toLowerCase() === 'live' ? 'p' : 'q'
   const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env
 
-  if (!DB_USER || !DB_PASSWORD || !DB_HOST || !DB_PORT) {
+  if (!DB_USER || !DB_PASSWORD || !DB_HOST) {
     throw new AppError({
       name: 'DATABASE_CONFIG_MISSING',
       requestId,
