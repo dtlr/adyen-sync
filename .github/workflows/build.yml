@@ -2,7 +2,7 @@ name: JDNA Sync
 
 on:
   pull_request:
-    types: [closed]
+    types: [closed, opened, reopened, synchronize]
     branches:
       - main
       - qa
@@ -17,8 +17,77 @@ env:
   IMAGE_NAME: jdna-sync
 
 jobs:
+  env-setup:
+    runs-on: ubuntu-latest
+    outputs:
+      banners: ${{ steps.read-property.outputs.banners }}
+    steps:
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read property.json to get banners
+        id: read-property
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const propertyData = JSON.parse(fs.readFileSync('./property.json', 'utf8'))
+            const banners = Object.keys(propertyData)
+            return banners
+
+  app-setup:
+    if:
+      github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' &&
+      (github.event.action == 'opened' || github.event.action == 'synchronize' ||
+      github.event.action == 'reopened') || github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    needs: [env-setup]
+    strategy:
+      matrix:
+        banners: ${{ fromJson(needs.env-setup.outputs.banners) }}
+    env:
+      APP_ENV: ${{ github.ref_name == 'main' && 'live' || 'test' }}
+    steps:
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: 1password/load-secrets-action@v2
+        id: load_secrets
+        with:
+          export-env: false
+        env:
+          CONNECT_TOKEN: op://Engineering/jrurekjt6arylw3fnmwy53rkwu/credential
+          NEON_API_KEY: op://Engineering/lus42zxvxdkmb6ln5cjcll7qnm/api_key
+          NEON_ORG_ID: op://Engineering/lus42zxvxdkmb6ln5cjcll7qnm/dtlr_org_id
+          APP_NEON_DATABASE_URI:
+            op://Engineering/jdna-sync-${{ matrix.banners }}-${{ env.APP_ENV }}/connection_string
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure Neon Project is created
+        env:
+          CONNECT_TOKEN: ${{ steps.load_secrets.outputs.CONNECT_TOKEN }}
+          NEON_API_KEY: ${{ steps.load_secrets.outputs.NEON_API_KEY }}
+          NEON_ORG_ID: ${{ steps.load_secrets.outputs.NEON_ORG_ID }}
+          APP_NEON_DATABASE_URI: ${{ steps.load_secrets.outputs.APP_NEON_DATABASE_URI }}
+        run: npm run neon:create
+
+      - name: Ensure Neon Project is migrated
+        env:
+          CONNECT_TOKEN: ${{ steps.load_secrets.outputs.CONNECT_TOKEN }}
+          NEON_API_KEY: ${{ steps.load_secrets.outputs.NEON_API_KEY }}
+          NEON_ORG_ID: ${{ steps.load_secrets.outputs.NEON_ORG_ID }}
+          APP_NEON_DATABASE_URI: ${{ steps.load_secrets.outputs.APP_NEON_DATABASE_URI }}
+        run: npm run neon:migrate
+
   build:
     if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+    needs: [app-setup]
     runs-on: ubuntu-latest
     permissions:
       contents: read

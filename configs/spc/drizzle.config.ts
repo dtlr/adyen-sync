@@ -6,7 +6,7 @@ export default defineConfig({
   schema: './src/db/neonSchema.ts',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.SPC_DATABASE_URI!,
+    url: process.env.APP_NEON_DATABASE_URI!,
   },
   introspect: {
     casing: 'camel',
