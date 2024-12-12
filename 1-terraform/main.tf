@@ -188,7 +188,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/template/spec/containers/0/env/6/value
-                  value: ${each.key}
+                  value: '${each.key}'
 
                 EOT
                 target = {
@@ -200,7 +200,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/template/spec/containers/0/env/7/value
-                  value: ${each.value}
+                  value: '${each.value}'
 
                 EOT
                 target = {
@@ -406,7 +406,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/jobTemplate/spec/template/spec/containers/0/env/5/value
-                  value: ${each.key}
+                  value: '${each.key}'
 
                 EOT
                 target = {
@@ -418,7 +418,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/jobTemplate/spec/template/spec/containers/0/env/6/value
-                  value: ${each.value}
+                  value: '${each.value}'
 
                 EOT
                 target = {
@@ -550,7 +550,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/jobTemplate/spec/template/spec/containers/0/env/5/value
-                  value: ${each.key}
+                  value: '${each.key}'
 
                 EOT
                 target = {
@@ -562,7 +562,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/jobTemplate/spec/template/spec/containers/0/env/6/value
-                  value: ${each.value}
+                  value: '${each.value}'
 
                 EOT
                 target = {

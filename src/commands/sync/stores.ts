@@ -33,6 +33,13 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
       this.log('Starting stores sync')
     }
 
+    if (!Array.isArray(flags.banner)) {
+      flags.banner = [flags.banner]
+    }
+    if (!Array.isArray(flags.merchantId)) {
+      flags.merchantId = [flags.merchantId]
+    }
+
     for (const idx in flags.banner) {
       await migrateDb(flags.requestId, flags.banner[idx])
 

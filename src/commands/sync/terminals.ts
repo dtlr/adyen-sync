@@ -19,6 +19,14 @@ export class SyncTerminalsCommand extends SyncBaseCommand<typeof SyncTerminalsCo
       requestId: flags.requestId,
       message: 'Starting local sync',
     })
+
+    if (!Array.isArray(flags.banner)) {
+      flags.banner = [flags.banner]
+    }
+    if (!Array.isArray(flags.merchantId)) {
+      flags.merchantId = [flags.merchantId]
+    }
+
     for (const idx in flags.banner) {
       await migrateDb(flags.requestId, flags.banner[idx])
 
