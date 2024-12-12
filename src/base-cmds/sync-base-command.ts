@@ -67,10 +67,6 @@ export abstract class SyncBaseCommand<T extends typeof Command> extends Command 
       args: this.ctor.args,
       strict: this.ctor.strict,
     })
-    await this.config.runHook('migration', {
-      requestId: flags.requestId,
-      id: 'sync-command',
-    })
     this.flags = flags as Flags<T>
     this.args = args as Args<T>
   }

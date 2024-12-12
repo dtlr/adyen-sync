@@ -40,7 +40,7 @@ const neonApi = createApiClient({
       const safeName = banner.toLowerCase().replace(/_/g, '-')
       const path = `configs/${safeName}`
       const file = 'drizzle.config.ts'
-      const envVarName = `${banner.toUpperCase()}_DATABASE_URI`
+      const envVarName = `APP_NEON_DATABASE_URI`
 
       if (!existsSync(path)) {
         mkdirSync(path)
