@@ -304,6 +304,18 @@ resource "kubernetes_manifest" "argo_app" {
                   name = "terminals-cronjob"
                 }
               },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/data/0/remoteRef/property
+                  value: ${local.app_env == "live" ? "credential" : "credential-test"}
+
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret-common"
+                }
+              },
             ]
           }
         },
