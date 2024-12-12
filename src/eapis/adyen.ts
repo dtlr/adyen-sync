@@ -1,5 +1,6 @@
 import { logger } from '@util/logger.js'
 import axios from 'axios'
+import { type NestedOmit } from 'types'
 import {
   type AdyenStoreCreate,
   type AdyenStore,
@@ -251,7 +252,7 @@ export const getAdyenTerminals = async ({
 export const updateAdyenStore = async (
   appEnv: (typeof APP_ENVS)[number],
   storeId: string,
-  store: AdyenStoreCreate,
+  store: NestedOmit<AdyenStoreCreate, 'address.country'>,
 ) => {
   const { ax } = adyenConfig(appEnv)
   const query = await ax.patch(`/stores/${storeId}`, store)

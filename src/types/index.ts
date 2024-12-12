@@ -2,6 +2,14 @@ import { z } from 'zod'
 
 export type PromiseResolvedType<T> = T extends Promise<infer R> ? R : never
 
+export type NestedOmit<Schema, Path extends string> = Path extends `${infer Head}.${infer Tail}`
+  ? Head extends keyof Schema
+    ? {
+        [K in keyof Schema]: K extends Head ? NestedOmit<Schema[K], Tail> : Schema[K]
+      }
+    : Schema
+  : Omit<Schema, Path>
+
 export type Bindings = {
   APP_ENV: 'PROD' | 'prod' | 'QA' | 'qa' | 'DEV' | 'dev' | undefined
   DATABASE_URL?: string
