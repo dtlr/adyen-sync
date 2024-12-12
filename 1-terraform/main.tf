@@ -84,6 +84,9 @@ resource "kubernetes_manifest" "argo_app" {
       project = data.terraform_remote_state.app_0.outputs.argo_details.project_name
       sources = [
         {
+          path           = "argo-app"
+          repoURL        = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
+          targetRevision = terraform.workspace
           kustomize = {
             commonLabels = {
               env                                            = local.app_env
@@ -104,7 +107,7 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Service"
-                  name = "svc"
+                  name = "app-svc"
                 }
               },
               {
@@ -116,7 +119,7 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Service"
-                  name = "svc"
+                  name = "app-svc"
                 }
               },
               {
@@ -128,7 +131,7 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Deployment"
-                  name = "appDeployment"
+                  name = "app-deployment"
                 }
               },
               {
@@ -140,7 +143,7 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Deployment"
-                  name = "appDeployment"
+                  name = "app-deployment"
                 }
               },
               {
@@ -152,19 +155,43 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Deployment"
-                  name = "appDeployment"
+                  name = "app-deployment"
                 }
               },
               {
                 patch = <<-EOT
                 - op: replace
-                  path: /spec/template/spec/containers/0/env/4/valueFrom/secretKeyRef/name
+                  path: /spec/template/spec/containers/0/env/5/valueFrom/secretKeyRef/name
                   value: "${local.app_secret_name}-${each.key}-${local.app_env}"
 
                 EOT
                 target = {
                   kind = "Deployment"
-                  name = "appDeployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/6/valueFrom/secretKeyRef/name
+                  value: "${local.app_secret_name}-${each.key}-${local.app_env}"
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/7/valueFrom/secretKeyRef/name
+                  value: "${local.app_secret_name}-${each.key}-${local.app_env}"
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "app-deployment"
                 }
               },
               {
@@ -178,7 +205,7 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Deployment"
-                  name = "appDeployment"
+                  name = "app-deployment"
                 }
               },
               {
@@ -190,7 +217,7 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Ingress"
-                  name = "appIngress"
+                  name = "app-ingress"
                 }
               },
               {
@@ -202,7 +229,7 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Ingress"
-                  name = "appIngress"
+                  name = "app-ingress"
                 }
               },
               {
@@ -214,7 +241,7 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Ingress"
-                  name = "appIngress"
+                  name = "app-ingress"
                 }
               },
               {
@@ -226,7 +253,19 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "Ingress"
-                  name = "appIngress"
+                  name = "app-ingress"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/rules/0/http/paths/0/backend/service/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}
+
+                EOT
+                target = {
+                  kind = "Ingress"
+                  name = "app-ingress"
                 }
               },
               {
@@ -238,14 +277,11 @@ resource "kubernetes_manifest" "argo_app" {
                 EOT
                 target = {
                   kind = "CronJob"
-                  name = "appSyncTerminalsCronJob"
+                  name = "app-sync-terminals-cronjob"
                 }
               },
             ]
           }
-          path           = "argo"
-          repoURL        = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
-          targetRevision = terraform.workspace
         },
       ]
       syncPolicy = {

@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: svc
+  name: app-svc
 spec:
   selector:
-    app: svc
+    app: app-svc
   ports:
     - port: 80
       targetPort: 3000
