@@ -211,6 +211,18 @@ resource "kubernetes_manifest" "argo_app" {
               {
                 patch = <<-EOT
                 - op: add
+                  path: /metadata/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}
+
+                EOT
+                target = {
+                  kind = "Ingress"
+                  name = "app-ingress"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: add
                   path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
                   value: "${local.app_name}-${each.key}${local.app_env == "live" ? "" : ".test"}.jdna.io"
 
@@ -272,12 +284,24 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /metadata/name
-                  value: "${local.app_name}-${each.key}-${local.app_env}"
+                  value: "${local.app_name}-${each.key}-${local.app_env}-stores-cronjob"
 
                 EOT
                 target = {
                   kind = "CronJob"
-                  name = "app-sync-terminals-cronjob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /metadata/name
+                  value: "${local.app_name}-${each.key}-${local.app_env}-terminals-cronjob"
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
                 }
               },
             ]
