@@ -2,10 +2,11 @@ import * as neonSchema from '@db/neonSchema.js'
 import { migrate } from 'drizzle-orm/neon-serverless/migrator'
 import { neonDb } from './db'
 import { AppError } from '@/error'
+import 'dotenv/config'
 
 export const migrateDb = async (requestId: string, banner: string) => {
-  const connString = process.env['APP_NEON_DATABASE_URI']
-  if (!connString) {
+  const { APP_NEON_DATABASE_URI } = process.env
+  if (!APP_NEON_DATABASE_URI) {
     throw new AppError({
       requestId,
       name: 'DATABASE_CONFIG_MISSING',
@@ -16,7 +17,7 @@ export const migrateDb = async (requestId: string, banner: string) => {
       },
     })
   }
-  const db = neonDb(connString, {
+  const db = neonDb(APP_NEON_DATABASE_URI, {
     schema: neonSchema,
   })
 

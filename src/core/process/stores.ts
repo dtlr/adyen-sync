@@ -13,6 +13,7 @@ import { eq } from 'drizzle-orm'
 import { type AdyenStoreCreate, type AdyenStore } from 'types/adyen.js'
 import { type APP_ENVS } from '@/constants.js'
 import { AppError } from '@/error.js'
+import 'dotenv/config'
 
 export const getJDNAStores = async ({
   requestId,
@@ -115,8 +116,8 @@ export const processJDNAStores = async ({
     })
     return []
   }
-  const connString = process.env['APP_NEON_DATABASE_URI']
-  if (!connString) {
+  const { APP_NEON_DATABASE_URI } = process.env
+  if (!APP_NEON_DATABASE_URI) {
     throw new AppError({
       requestId,
       name: 'DATABASE_CONFIG_MISSING',
@@ -124,7 +125,7 @@ export const processJDNAStores = async ({
     })
   }
   try {
-    const db = neonDb(connString, { schema: neonSchema })
+    const db = neonDb(APP_NEON_DATABASE_URI, { schema: neonSchema })
     await db.transaction(async (tx) => {
       for (const item of tmp) {
         await tx
@@ -165,8 +166,8 @@ export const processAdyenStores = async ({
   appEnv: (typeof APP_ENVS)[number]
 }) => {
   // Read all stores from the database using banner to determine which database to use
-  const connString = process.env['APP_NEON_DATABASE_URI']
-  if (!connString) {
+  const { APP_NEON_DATABASE_URI } = process.env
+  if (!APP_NEON_DATABASE_URI) {
     throw new AppError({
       requestId,
       name: 'DATABASE_CONFIG_MISSING',
@@ -174,7 +175,7 @@ export const processAdyenStores = async ({
     })
   }
   try {
-    const db = neonDb(connString, { schema: neonSchema })
+    const db = neonDb(APP_NEON_DATABASE_URI, { schema: neonSchema })
     const stores = await db.select().from(neonSchema.stores)
     // Iterate over the stores and test for the following:
     // 1. If the store has an adyenId, then we need to update the record in Adyen

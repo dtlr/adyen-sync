@@ -8,6 +8,8 @@ import { eq } from 'drizzle-orm'
 import { type AdyenTerminal } from 'types/adyen.js'
 import { type APP_ENVS, POSWRKIDS } from '@/constants.js'
 import { AppError } from '@/error.js'
+import 'dotenv/config'
+
 export const getAdyenTerminals = async ({
   requestId,
   banner,
@@ -128,8 +130,8 @@ export const processTerminals = async ({
     })
     return []
   }
-  const connString = process.env['APP_NEON_DATABASE_URI']
-  if (!connString) {
+  const { APP_NEON_DATABASE_URI } = process.env
+  if (!APP_NEON_DATABASE_URI) {
     logger('process-terminals').error({
       requestId,
       message: `No database connection string found for ${banner}`,
@@ -140,7 +142,7 @@ export const processTerminals = async ({
       message: `No database connection string found for ${banner}`,
     })
   }
-  const db = neonDb(connString, { schema: neonSchema })
+  const db = neonDb(APP_NEON_DATABASE_URI, { schema: neonSchema })
   await db.transaction(async (tx) => {
     for (const item of tmp) {
       let storeId: string | undefined

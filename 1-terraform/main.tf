@@ -393,6 +393,18 @@ resource "kubernetes_manifest" "argo_app" {
               {
                 patch = <<-EOT
                 - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/4/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-banner
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
                   path: /spec/jobTemplate/spec/template/spec/containers/0/env/5/value
                   value: ${each.key}
 
@@ -515,6 +527,18 @@ resource "kubernetes_manifest" "argo_app" {
                 - op: replace
                   path: /metadata/name
                   value: "${local.app_name}-${each.key}-${local.app_env}-terminals-cronjob"
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/4/valueFrom/secretKeyRef/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-banner
 
                 EOT
                 target = {
