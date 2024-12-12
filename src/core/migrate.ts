@@ -4,7 +4,7 @@ import { neonDb } from './db'
 import { AppError } from '@/error'
 
 export const migrateDb = async (requestId: string, banner: string) => {
-  const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
+  const connString = process.env['APP_NEON_DATABASE_URI']
   if (!connString) {
     throw new AppError({
       requestId,

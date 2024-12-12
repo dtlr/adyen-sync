@@ -128,7 +128,7 @@ export const processTerminals = async ({
     })
     return []
   }
-  const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
+  const connString = process.env['APP_NEON_DATABASE_URI']
   if (!connString) {
     logger('process-terminals').error({
       requestId,

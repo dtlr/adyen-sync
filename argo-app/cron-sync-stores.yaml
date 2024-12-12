@@ -26,10 +26,27 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.labels['tags.datadoghq.com/app.service']
+                - name: LOG_LEVEL
+                  value: 'debug'
                 - name: APP_ENV
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.labels['env']
+                - name: APP_NEON_DATABASE_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-banner
+                      key: APP_NEON_DATABASE_URI
+                - name: APP_BANNER
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-banner
+                      key: APP_BANNER
+                - name: APP_BANNER_MERCHANT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-banner
+                      key: APP_BANNER_MERCHANT_ID
                 - name: DB_USER
                   valueFrom:
                     secretKeyRef:
@@ -55,11 +72,6 @@ spec:
                     secretKeyRef:
                       name: app-secret
                       key: ADYEN_KEY
-                - name: APP_DATABASE_URI
-                  valueFrom:
-                    secretKeyRef:
-                      name: app-secret
-                      key: DTLR_DATABASE_URI
                 - name: LOCATIONSAPI_URL
                   valueFrom:
                     secretKeyRef:

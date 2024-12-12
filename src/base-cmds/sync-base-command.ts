@@ -31,7 +31,7 @@ export abstract class SyncBaseCommand<T extends typeof Command> extends Command 
     }),
     merchantId: Flags.string({
       description: 'The merchant ID to sync',
-      env: 'APP_MERCHANT_ID',
+      env: 'APP_BANNER_MERCHANT_ID',
       char: 'm',
       multiple: true,
       delimiter: ',',

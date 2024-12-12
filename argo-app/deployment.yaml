@@ -32,45 +32,55 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.labels['env']
-            - name: DTLR_DATABASE_URI
+            - name: APP_NEON_DATABASE_URI
               valueFrom:
                 secretKeyRef:
-                  name: app-secret
-                  key: DTLR_DATABASE_URI
+                  name: app-secret-banner
+                  key: APP_NEON_DATABASE_URI
+            - name: APP_BANNER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret-banner
+                  key: APP_BANNER
+            - name: APP_BANNER_MERCHANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret-banner
+                  key: APP_BANNER_MERCHANT_ID
             - name: LOCATIONSAPI_URL
               valueFrom:
                 secretKeyRef:
-                  name: app-secret
+                  name: app-secret-common
                   key: LOCATIONSAPI_URL
             - name: LOCATIONSAPI_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: app-secret
+                  name: app-secret-common
                   key: LOCATIONSAPI_CLIENT_ID
             - name: LOCATIONSAPI_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: app-secret
+                  name: app-secret-common
                   key: LOCATIONSAPI_CLIENT_SECRET
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: app-secret
+                  name: app-secret-common
                   key: DB_USER
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: app-secret
+                  name: app-secret-common
                   key: DB_PASSWORD
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
-                  name: app-secret
+                  name: app-secret-common
                   key: DB_PORT
             - name: ADYEN_KEY
               valueFrom:
                 secretKeyRef:
-                  name: app-secret
+                  name: app-secret-common
                   key: ADYEN_KEY
           resources:
             requests:

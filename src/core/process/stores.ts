@@ -115,7 +115,7 @@ export const processJDNAStores = async ({
     })
     return []
   }
-  const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
+  const connString = process.env['APP_NEON_DATABASE_URI']
   if (!connString) {
     throw new AppError({
       requestId,
@@ -123,10 +123,6 @@ export const processJDNAStores = async ({
       message: `No database connection string found for ${banner}`,
     })
   }
-  logger('process-jdna-stores').debug({
-    requestId,
-    message: `Using database connection string: ${process.env[`${banner.toUpperCase()}_DATABASE_URI`]}`,
-  })
   try {
     const db = neonDb(connString, { schema: neonSchema })
     await db.transaction(async (tx) => {
@@ -169,7 +165,7 @@ export const processAdyenStores = async ({
   appEnv: (typeof APP_ENVS)[number]
 }) => {
   // Read all stores from the database using banner to determine which database to use
-  const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
+  const connString = process.env['APP_NEON_DATABASE_URI']
   if (!connString) {
     throw new AppError({
       requestId,
@@ -177,10 +173,6 @@ export const processAdyenStores = async ({
       message: `No database connection string found for ${banner}`,
     })
   }
-  logger('process-adyen-stores').debug({
-    requestId,
-    message: `Using database connection string: ${process.env[`${banner.toUpperCase()}_DATABASE_URI`]}`,
-  })
   try {
     const db = neonDb(connString, { schema: neonSchema })
     const stores = await db.select().from(neonSchema.stores)

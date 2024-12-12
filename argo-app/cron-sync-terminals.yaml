@@ -26,6 +26,27 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.labels['tags.datadoghq.com/app.service']
+                - name: LOG_LEVEL
+                  value: 'debug'
+                - name: APP_ENV
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.labels['env']
+                - name: APP_NEON_DATABASE_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-banner
+                      key: APP_NEON_DATABASE_URI
+                - name: APP_BANNER
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-banner
+                      key: APP_BANNER
+                - name: APP_BANNER_MERCHANT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-banner
+                      key: APP_BANNER_MERCHANT_ID
                 - name: APP_ENV
                   valueFrom:
                     fieldRef:
@@ -33,47 +54,42 @@ spec:
                 - name: DB_USER
                   valueFrom:
                     secretKeyRef:
-                      name: app-secret
+                      name: app-secret-common
                       key: DB_USER
                 - name: DB_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: app-secret
+                      name: app-secret-common
                       key: DB_PASSWORD
                 - name: DB_HOST
                   valueFrom:
                     secretKeyRef:
-                      name: app-secret
+                      name: app-secret-common
                       key: DB_HOST
                 - name: DB_PORT
                   valueFrom:
                     secretKeyRef:
-                      name: app-secret
+                      name: app-secret-common
                       key: DB_PORT
                 - name: ADYEN_KEY
                   valueFrom:
                     secretKeyRef:
-                      name: app-secret
+                      name: app-secret-common
                       key: ADYEN_KEY
-                - name: APP_DATABASE_URI
-                  valueFrom:
-                    secretKeyRef:
-                      name: app-secret
-                      key: APP_DATABASE_URI
                 - name: LOCATIONSAPI_URL
                   valueFrom:
                     secretKeyRef:
-                      name: app-secret
+                      name: app-secret-common
                       key: LOCATIONSAPI_URL
                 - name: LOCATIONSAPI_CLIENT_ID
                   valueFrom:
                     secretKeyRef:
-                      name: app-secret
+                      name: app-secret-common
                       key: LOCATIONSAPI_CLIENT_ID
                 - name: LOCATIONSAPI_CLIENT_SECRET
                   valueFrom:
                     secretKeyRef:
-                      name: app-secret
+                      name: app-secret-common
                       key: LOCATIONSAPI_CLIENT_SECRET
               resources:
                 requests:

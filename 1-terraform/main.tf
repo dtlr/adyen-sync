@@ -54,33 +54,212 @@ provider "kubernetes" {
 }
 
 locals {
+  property_file   = "${path.module}/../property.json"
+  project_data    = jsondecode(file(local.property_file))
+  banners         = keys(local.project_data)
   app_name        = var.app_name != null ? var.app_name : "jdna-sync"
   app_secret_name = "app-secret"
-  banners         = keys(jsondecode(file("${path.module}/../property.json")))
-
-  appset = yamldecode(templatefile("${path.module}/argo/appset.tftpl", {
-    app_name          = local.app_name
-    env               = terraform.workspace == "main" ? "live" : "test"
-    dest_cluster_name = data.terraform_remote_state.app_0.outputs.argo_details.destination
-    dest_cluster_ns   = data.terraform_remote_state.app_0.outputs.namespace
-    project_name      = local.app_name
-    list_elements     = yamlencode([for banner in local.banners : { banner = banner }])
-    repo_url          = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
-    target_revision   = terraform.workspace
-    image_registry    = var.image_registry
-    image_name        = local.app_name
-    image_tag         = var.image_tags[terraform.workspace]
-    app_secret_name   = "${local.app_secret_name}-${terraform.workspace == "main" ? "live" : "test"}"
-  }))
-
-  appset_json = jsonencode(local.appset)
+  app_env         = terraform.workspace == "main" ? "live" : "test"
 }
 
-resource "local_file" "argo_appset" {
-  content  = local.appset_json
-  filename = "${path.module}/argo/appset.yaml"
-}
+resource "kubernetes_manifest" "argo_app" {
+  for_each = local.project_data
 
-# resource "kubernetes_manifest" "argo_appset" {
-#   manifest = provider::kubernetes::manifest_decode(local.appset_json)
-# }
+  manifest = {
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "Application"
+    metadata = {
+      labels = {
+        app = "${local.app_name}-${each.key}-${local.app_env}"
+        env = local.app_env
+      }
+      name      = "${local.app_name}-${each.key}-${local.app_env}"
+      namespace = data.terraform_remote_state.app_0.outputs.namespace
+    }
+    spec = {
+      destination = {
+        name      = data.terraform_remote_state.app_0.outputs.argo_details.destination
+        namespace = "${data.terraform_remote_state.app_0.outputs.argo_details.namespace}-${local.app_env}"
+      }
+      project = data.terraform_remote_state.app_0.outputs.argo_details.project_name
+      sources = [
+        {
+          kustomize = {
+            commonLabels = {
+              env                                            = local.app_env
+              "tags.datadoghq.com/${local.app_name}.env"     = local.app_env
+              "tags.datadoghq.com/${local.app_name}.service" = local.app_name
+            }
+            namespace = "${data.terraform_remote_state.app_0.outputs.argo_details.namespace}-${local.app_env}"
+            images = [
+              "${var.image_registry}/${local.app_name}:${var.image_tags[terraform.workspace]}"
+            ]
+            patches = [
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /metadata/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}
+
+                EOT
+                target = {
+                  kind = "Service"
+                  name = "svc"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/selector/app
+                  value: ${local.app_name}-${each.key}-${local.app_env}
+
+                EOT
+                target = {
+                  kind = "Service"
+                  name = "svc"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /metadata/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "appDeployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/selector/matchLabels/app
+                  value: ${local.app_name}-${each.key}-${local.app_env}
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "appDeployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/3/value
+                  value: ${local.app_env == "live" ? "info" : "debug"}
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "appDeployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/4/valueFrom/secretKeyRef/name
+                  value: "${local.app_secret_name}-${each.key}-${local.app_env}"
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "appDeployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/template/spec/containers/0/env/0
+                  value:
+                    name: APP_PORT
+                    value: "3000"
+
+                EOT
+                target = {
+                  kind = "Deployment"
+                  name = "appDeployment"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: add
+                  path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
+                  value: "${local.app_name}-${each.key}${local.app_env == "live" ? "" : ".test"}.jdna.io"
+
+                EOT
+                target = {
+                  kind = "Ingress"
+                  name = "appIngress"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/rules/0/host
+                  value: "${local.app_name}-${each.key}${local.app_env == "live" ? "" : ".test"}.jdna.io"
+
+                EOT
+                target = {
+                  kind = "Ingress"
+                  name = "appIngress"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/tls/0/hosts/0
+                  value: "${local.app_name}-${each.key}${local.app_env == "live" ? "" : ".test"}.jdna.io"
+
+                EOT
+                target = {
+                  kind = "Ingress"
+                  name = "appIngress"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/tls/0/secretName
+                  value: "${local.app_name}-${each.key}-${local.app_env}-tls"
+
+                EOT
+                target = {
+                  kind = "Ingress"
+                  name = "appIngress"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /metadata/name
+                  value: "${local.app_name}-${each.key}-${local.app_env}"
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "appSyncTerminalsCronJob"
+                }
+              },
+            ]
+          }
+          path           = "argo"
+          repoURL        = data.terraform_remote_state.app_0.outputs.argo_details.repo_url
+          targetRevision = terraform.workspace
+        },
+      ]
+      syncPolicy = {
+        automated = {
+          prune    = true
+          selfHeal = true
+        }
+        syncOptions = [
+          "CreateNamespace=true",
+          "PrunePropagationPolicy=foreground",
+          "PruneLast=true",
+          "RespectIgnoreDifferences=true",
+        ]
+      }
+    }
+  }
+}
