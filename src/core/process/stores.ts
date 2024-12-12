@@ -228,9 +228,9 @@ export const processAdyenStores = async ({
             storeId: store.adyenId,
           },
         })
-        const { address, ...rest } = adyenStore
+        const { address, reference, merchantId, shopperStatement, ...rest } = adyenStore
         const { country, ...restAddress } = address
-        const updatedStore = { ...rest, address: restAddress }
+        const updatedStore = { ...rest, address: restAddress, reference }
         await updateAdyenStore(appEnv, store.adyenId, updatedStore)
       } else if (!store.adyenId && store.status) {
         logger('process-adyen-stores').info({
