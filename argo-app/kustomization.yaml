@@ -2,7 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - app-secret.yaml
+  - app-secret-common.yaml
+  - app-secret-banner.yaml
   - pull-secret.yaml
   - deployment.yaml
   - service.yaml

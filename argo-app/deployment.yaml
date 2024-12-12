@@ -38,15 +38,9 @@ spec:
                   name: app-secret-banner
                   key: APP_NEON_DATABASE_URI
             - name: APP_BANNER
-              valueFrom:
-                secretKeyRef:
-                  name: app-secret-banner
-                  key: APP_BANNER
+              value: some-value
             - name: APP_BANNER_MERCHANT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: app-secret-banner
-                  key: APP_BANNER_MERCHANT_ID
+              value: some-value
             - name: LOCATIONSAPI_URL
               valueFrom:
                 secretKeyRef:

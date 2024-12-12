@@ -174,7 +174,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/template/spec/containers/0/env/6/valueFrom/secretKeyRef/name
-                  value: "${local.app_secret_name}-${each.key}-${local.app_env}"
+                  value: ${each.key}
 
                 EOT
                 target = {
@@ -186,7 +186,7 @@ resource "kubernetes_manifest" "argo_app" {
                 patch = <<-EOT
                 - op: replace
                   path: /spec/template/spec/containers/0/env/7/valueFrom/secretKeyRef/name
-                  value: "${local.app_secret_name}-${each.key}-${local.app_env}"
+                  value: ${each.value}
 
                 EOT
                 target = {
@@ -295,6 +295,30 @@ resource "kubernetes_manifest" "argo_app" {
               {
                 patch = <<-EOT
                 - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/5/value
+                  value: ${each.key}
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/6/value
+                  value: ${each.value}
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "stores-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
                   path: /metadata/name
                   value: "${local.app_name}-${each.key}-${local.app_env}-terminals-cronjob"
 
@@ -307,6 +331,54 @@ resource "kubernetes_manifest" "argo_app" {
               {
                 patch = <<-EOT
                 - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/5/value
+                  value: ${each.key}
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/jobTemplate/spec/template/spec/containers/0/env/6/value
+                  value: ${each.value}
+
+                EOT
+                target = {
+                  kind = "CronJob"
+                  name = "terminals-cronjob"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /metadata/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret-common"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/target/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-common
+
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret-common"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
                   path: /spec/data/0/remoteRef/property
                   value: ${local.app_env == "live" ? "credential" : "credential-test"}
 
@@ -314,6 +386,42 @@ resource "kubernetes_manifest" "argo_app" {
                 target = {
                   kind = "ExternalSecret"
                   name = "app-secret-common"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /metadata/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-banner
+
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret-banner"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/target/name
+                  value: ${local.app_name}-${each.key}-${local.app_env}-banner
+
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret-banner"
+                }
+              },
+              {
+                patch = <<-EOT
+                - op: replace
+                  path: /spec/data/0/remoteRef/key
+                  value: ${local.app_name}-${each.key}-${local.app_env}
+
+                EOT
+                target = {
+                  kind = "ExternalSecret"
+                  name = "app-secret-banner"
                 }
               },
             ]
