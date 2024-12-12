@@ -22,6 +22,12 @@ jobs:
     outputs:
       banners: ${{ steps.read-property.outputs.banners }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            property.json
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
@@ -50,6 +56,10 @@ jobs:
     env:
       APP_ENV: ${{ github.ref_name == 'main' && 'live' || 'test' }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
