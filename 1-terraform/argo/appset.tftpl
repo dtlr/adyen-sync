@@ -112,14 +112,14 @@ spec:
               - patch: |
                   - op: replace
                     path: /spec/template/spec/containers/0/env/8/name
-                    value: {{ upper .banner }}_DATABASE_URI
+                    value: '{{ upper .banner }}_DATABASE_URI'
                 target:
                   kind: CronJob
                   name: appSyncStoresCronJob
               - patch: |
                   - op: replace
                     path: /spec/template/spec/containers/0/env/8/valueFrom/secretKeyRef/key
-                    value: {{ upper .banner }}_DATABASE_URI
+                    value: '{{ upper .banner }}_DATABASE_URI'
                 target:
                   kind: CronJob
                   name: appSyncStoresCronJob
@@ -133,14 +133,14 @@ spec:
               - patch: |
                   - op: replace
                     path: /spec/template/spec/containers/0/env/8/name
-                    value: {{ upper .banner }}_DATABASE_URI
+                    value: '{{ upper .banner }}_DATABASE_URI'
                 target:
                   kind: CronJob
                   name: appSyncTerminalsCronJob
               - patch: |
                   - op: replace
                     path: /spec/template/spec/containers/0/env/8/valueFrom/secretKeyRef/key
-                    value: {{ upper .banner }}_DATABASE_URI
+                    value: '{{ upper .banner }}_DATABASE_URI'
                 target:
                   kind: CronJob
                   name: appSyncTerminalsCronJob
