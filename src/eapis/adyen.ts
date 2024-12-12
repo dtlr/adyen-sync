@@ -41,7 +41,7 @@ const adyenConfig = (appEnv: (typeof APP_ENVS)[number]) => {
   }
 }
 
-export const fetchAdyenData = async ({
+export const getAdyenStores = async ({
   requestId,
   appEnv,
   opts = {},
@@ -49,8 +49,101 @@ export const fetchAdyenData = async ({
   requestId: string
   appEnv: (typeof APP_ENVS)[number]
   opts: {
-    type?: 'stores' | 'terminals'
-    page?: number
+    pageSize?: number
+    merchantIds?: string
+    storeIds?: string
+    reference?: string
+  }
+}) => {
+  const { ax } = adyenConfig(appEnv)
+
+  try {
+    let pagesTotal: number
+    let data: AdyenStore[] = []
+    const pageSize = opts.pageSize || 100
+    let pageNumber = 1
+
+    let totalDataFetched = 0
+    const queryParams: Record<string, string> = {}
+    if (opts.storeIds) {
+      queryParams.storeIds = opts.storeIds
+    }
+    if (opts.merchantIds) {
+      queryParams.merchantId = opts.merchantIds
+    }
+    if (opts.reference) {
+      queryParams.reference = opts.reference
+    }
+
+    do {
+      logger('eapis-adyen').debug({
+        message: `Fetching stores data with query params`,
+        requestId,
+        extraInfo: { queryParams },
+      })
+      const response = await ax.get<AdyenStoresResponse>('/stores', {
+        params: {
+          ...queryParams,
+          pageSize: pageSize,
+          pageNumber,
+        },
+      })
+      pagesTotal = response.data.pagesTotal
+      logger('eapis-adyen').debug({
+        message: `Fetched ${response.data.data.length} records`,
+        requestId,
+        extraInfo: {
+          storeReferences: response.data.data.map((store) => store.reference),
+        },
+      })
+      data = [...data, ...response.data.data]
+      totalDataFetched += response.data.data.length
+      logger('eapis-adyen').debug({
+        message: `Fetched ${response.data.data.length} records`,
+        requestId,
+        extraInfo: {
+          dataSize: response.data.data.length,
+          pagesTotal,
+          pageNumber,
+          pageSize,
+          nextPage: pageNumber + 1,
+          totalDataFetched,
+          adyenData: response.data.data.map((store) => ({
+            id: store.id,
+            reference: store.reference,
+            merchantId: store.merchantId,
+            status: store.status,
+            description: store.description,
+          })),
+        },
+      })
+      pageNumber += 1
+    } while (pageNumber <= pagesTotal)
+    logger('eapis-adyen').debug({
+      message: `Successfully fetched ${data.length} records`,
+      requestId,
+      extraInfo: {
+        totalDataFetched,
+      },
+    })
+    return data
+  } catch (error) {
+    throw new AppError({
+      name: 'ADYEN_API',
+      message: 'Error in the fetch call to Adyen API',
+      cause: error,
+    })
+  }
+}
+
+export const getAdyenTerminals = async ({
+  requestId,
+  appEnv,
+  opts = {},
+}: {
+  requestId: string
+  appEnv: (typeof APP_ENVS)[number]
+  opts: {
     pageSize?: number
     brandModels?: string
     merchantIds?: string
@@ -62,58 +155,90 @@ export const fetchAdyenData = async ({
 
   try {
     let pagesTotal: number
-    let data: (AdyenStore | AdyenTerminal)[] = []
+    let data: AdyenTerminal[] = []
     const pageSize = opts.pageSize || 100
-    let page = opts.page || 1
+    let pageNumber = 1
 
-    const queryParams: Record<string, string> = {
-      pageSize: pageSize.toString(),
-      page: page.toString(),
-    }
-    if (opts.type?.toLowerCase() === 'terminals' && opts.brandModels) {
+    let totalDataFetched = 0
+    const queryParams: Record<string, string> = {}
+    if (opts.brandModels) {
       queryParams.brandModels = opts.brandModels
     }
-    if (opts.type?.toLowerCase() === 'terminals' && opts.merchantIds) {
+    if (opts.merchantIds) {
       queryParams.merchantIds = opts.merchantIds
     }
-    if (opts.type?.toLowerCase() === 'terminals' && opts.storeIds) {
+    if (opts.storeIds) {
       queryParams.storeIds = opts.storeIds
     }
-    if (opts.type?.toLowerCase() === 'stores' && opts.merchantIds) {
+    if (opts.merchantIds) {
       queryParams.merchantId = opts.merchantIds
     }
-    if (opts.type?.toLowerCase() === 'stores' && opts.reference) {
+    if (opts.reference) {
       queryParams.reference = opts.reference
     }
 
-    logger('eapis-adyen').debug({
-      message: `Fetching ${opts.type} data with query params: ${queryParams}`,
-      requestId,
-      extraInfo: { type: opts.type, queryParams },
-    })
-
     do {
-      const query =
-        opts.type?.toLowerCase() === 'stores' ? `${endpoint}/stores` : `${endpoint}/terminals`
-      const response = await axios.get<AdyenStoresResponse | AdyenTerminalsResponse>(query, {
+      logger('eapis-adyen').debug({
+        message: `Fetching terminals data with query params`,
+        requestId,
+        extraInfo: { queryParams },
+      })
+      const query = `${endpoint}/terminals`
+      const response = await axios.get<AdyenTerminalsResponse>(query, {
         headers: {
           'Content-Type': 'application/json',
           'X-API-key': key,
         },
-        params: queryParams,
+        params: {
+          ...queryParams,
+          pageSize: pageSize,
+          pageNumber,
+        },
       })
       pagesTotal = response.data.pagesTotal
-      const apiData = response.data.data
-      data = data.concat(apiData)
-      page++
-    } while (pagesTotal > page)
+      data = [...data, ...response.data.data]
+      totalDataFetched += response.data.data.length
+      logger('eapis-adyen').debug({
+        message: `Fetched ${response.data.data.length} records`,
+        requestId,
+        extraInfo: {
+          dataSize: response.data.data.length,
+          pagesTotal,
+          pageNumber,
+          pageSize,
+          nextPage: pageNumber + 1,
+          totalDataFetched,
+          adyenData: response.data.data.map((terminal) => ({
+            id: terminal.id,
+            model: terminal.model,
+            serialNumber: terminal.serialNumber,
+            assignment: terminal.assignment,
+            firmwareVersion: terminal.firmwareVersion,
+            status: terminal.assignment.status,
+            merchantId: terminal.assignment.merchantId,
+            companyId: terminal.assignment.companyId,
+            storeId: terminal.assignment.storeId,
+          })),
+        },
+      })
+      pageNumber += 1
+    } while (pageNumber <= pagesTotal)
 
     logger('eapis-adyen').debug({
       message: `Successfully fetched ${data.length} records`,
       requestId,
-      data,
+      extraInfo: {
+        totalDataFetched,
+      },
     })
-    return opts.type === 'stores' ? (data as AdyenStore[]) : (data as AdyenTerminal[])
+    // logger('eapis-adyen').debug({
+    //   message: 'Fetched data',
+    //   requestId,
+    //   extraInfo: {
+    //     data,
+    //   },
+    // })
+    return data
   } catch (error) {
     throw new AppError({
       name: 'ADYEN_API',
