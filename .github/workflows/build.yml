@@ -41,7 +41,7 @@ jobs:
             const fs = require('fs')
             const propertyData = JSON.parse(fs.readFileSync('./property.json', 'utf8'))
             const banners = Object.keys(propertyData)
-            return banners
+            return { banners}
 
   app-setup:
     if:
