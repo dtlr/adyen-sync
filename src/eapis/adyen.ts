@@ -10,6 +10,7 @@ import {
 
 import { type APP_ENVS } from '@/constants'
 import { AppError } from '@/error.js'
+import { NestedOmit } from 'types'
 
 const adyenConfig = (appEnv: (typeof APP_ENVS)[number]) => {
   const { ADYEN_KEY, ADYEN_KEY_LIVE, ADYEN_KEY_TEST } = process.env
@@ -251,7 +252,7 @@ export const getAdyenTerminals = async ({
 export const updateAdyenStore = async (
   appEnv: (typeof APP_ENVS)[number],
   storeId: string,
-  store: AdyenStoreCreate,
+  store: NestedOmit<AdyenStoreCreate, 'address.country'>,
 ) => {
   const { ax } = adyenConfig(appEnv)
   const query = await ax.patch(`/stores/${storeId}`, store)
