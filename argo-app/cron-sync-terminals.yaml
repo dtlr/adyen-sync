@@ -1,0 +1,89 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: terminals-cronjob
+spec:
+  schedule: '0 * * * *'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: jdna-sync-terminals
+              image: ghcr.io/dtlr/jdna-sync:edge
+              imagePullPolicy: Always
+              args: ['sync', 'terminals']
+              env:
+                - name: DD_ENV
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.labels['tags.datadoghq.com/app.env']
+                - name: DD_SERVICE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.labels['tags.datadoghq.com/app.service']
+                - name: LOG_LEVEL
+                  value: 'debug'
+                - name: APP_ENV
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.labels['env']
+                - name: APP_NEON_DATABASE_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-banner
+                      key: APP_NEON_DATABASE_URI
+                - name: APP_BANNER
+                  value: some-value
+                - name: APP_BANNER_MERCHANT_ID
+                  value: some-value
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-common
+                      key: DB_USER
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-common
+                      key: DB_PASSWORD
+                - name: DB_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-common
+                      key: DB_HOST
+                - name: DB_PORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-common
+                      key: DB_PORT
+                - name: ADYEN_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-common
+                      key: ADYEN_KEY
+                - name: LOCATIONSAPI_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-common
+                      key: LOCATIONSAPI_URL
+                - name: LOCATIONSAPI_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-common
+                      key: LOCATIONSAPI_CLIENT_ID
+                - name: LOCATIONSAPI_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret-common
+                      key: LOCATIONSAPI_CLIENT_SECRET
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m

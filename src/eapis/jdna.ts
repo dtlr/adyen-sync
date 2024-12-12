@@ -1,21 +1,21 @@
+import { logger } from '@util/logger.js'
 import { type LocationLocal, localLocationSchema } from 'types'
-import { type APP_ENVS, type JDNAProperty } from '@/constants.js'
-import { logger } from '@/core/utils'
-import { AppError } from '@/error'
+import { type APP_ENVS } from '@/constants.js'
+import { AppError } from '@/error.js'
 
 export const getLocations = async (
   requestId: string,
   storeEnv: (typeof APP_ENVS)[number],
-  property?: (typeof JDNAProperty)[number],
+  banner?: string,
 ) => {
   const { LOCATIONSAPI_URL, LOCATIONSAPI_CLIENT_ID, LOCATIONSAPI_CLIENT_SECRET } = process.env
 
   logger('get-locations').debug({
     requestId,
-    message: `Getting locations for fascia: ${property}`,
+    message: `Getting locations for fascia: ${banner}`,
     extraInfo: {
       function: 'getLocations',
-      property,
+      banner,
       storeEnv,
     },
   })
@@ -38,7 +38,7 @@ export const getLocations = async (
 
   const locApiUri = `https://${LOCATIONSAPI_URL}`
 
-  if (property && property === 'spc') {
+  if (banner && banner === 'spc') {
     locResponse = await fetch(`${locApiUri}/ShoePalace`, {
       method: 'GET',
       headers: {
@@ -64,7 +64,7 @@ export const getLocations = async (
     message: `Got ${data.length} locations`,
     extraInfo: {
       function: 'getLocations',
-      property,
+      banner,
       storeEnv,
       data,
     },
@@ -81,7 +81,7 @@ export const getLocations = async (
         },
         extraInfo: {
           function: 'getLocations',
-          property,
+          banner,
           storeEnv,
           loc,
         },
@@ -91,7 +91,7 @@ export const getLocations = async (
     }
   }
 
-  switch (property) {
+  switch (banner) {
     case 'spc': {
       const closedLocs = [
         '1013',
@@ -161,7 +161,7 @@ export const getLocations = async (
     message: `Got ${locationsMap.size} locations`,
     extraInfo: {
       function: 'getLocations',
-      property,
+      banner,
       storeEnv,
       data: Array.from(locationsMap.entries()),
     },

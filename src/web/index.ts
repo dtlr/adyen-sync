@@ -1,3 +1,4 @@
+import { webLogger } from '@util/logger.js'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { RETAINED_304_HEADERS, etag } from 'hono/etag'
@@ -7,8 +8,8 @@ import { requestId } from 'hono/request-id'
 import { secureHeaders } from 'hono/secure-headers'
 import apiV2 from './api-v2.js'
 import ui from './ui.jsx'
-import { webLogger } from '@/core/utils.js'
 import { AppError } from '@/error.js'
+
 export const app = new Hono()
 
 app.use('*', requestId())

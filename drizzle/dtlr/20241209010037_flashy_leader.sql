@@ -1,1 +1,0 @@
-ALTER TABLE "terminals" ADD COLUMN "cellular_status" varchar(255);

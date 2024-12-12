@@ -1,41 +1,40 @@
+import { neonDb } from '@core/db'
 import * as neonSchema from '@db/neonSchema.js'
-import { drizzle } from 'drizzle-orm/neon-serverless'
-import { type APP_ENVS, JDNAProperty, type JDNAPropertyKey } from '@/constants.js'
-import { logger, parseStoreRef } from '@/core/utils.js'
-import { type InsertInternalStore } from '@/db/neonSchema'
-import { fetchAdyenData } from '@/eapis/adyen'
-import { getLocations } from '@/eapis/jdna'
-import { type AdyenStore } from '@/types/adyen'
+import {
+  createAdyenStore,
+  deactivateAdyenStore,
+  fetchAdyenData,
+  updateAdyenStore,
+} from '@eapis/adyen.js'
+import { getLocations } from '@eapis/jdna.js'
+import { parseStoreRef } from '@util'
+import { logger } from '@util/logger.js'
+import { eq } from 'drizzle-orm'
+import { type AdyenStoreCreate, type AdyenStore } from 'types/adyen.js'
+import { type APP_ENVS } from '@/constants.js'
+import { AppError } from '@/error.js'
+import 'dotenv/config'
 
 export const getJDNAStores = async ({
   requestId,
-  fascia,
+  banner,
   storeEnv,
 }: {
   requestId: string
-  fascia: JDNAPropertyKey | 'all'
+  banner: string
   storeEnv: (typeof APP_ENVS)[number]
 }) => {
   logger('get-jdna-stores').debug({
     requestId,
-    message: `Syncing stores for fascia: ${fascia}`,
+    message: `Syncing stores for banner: ${banner}`,
   })
-  let jdnaStoreData: Awaited<ReturnType<typeof getLocations>>
+  const jdnaStoreData = await getLocations(requestId, storeEnv, banner)
 
-  if (fascia === 'all') {
-    // get all stores
-    const dtlrStores = await getLocations(requestId, storeEnv, 'dtlr')
-    const shoePalaceStores = await getLocations(requestId, storeEnv, 'spc')
-    jdnaStoreData = new Map([...dtlrStores, ...shoePalaceStores])
-  } else {
-    // get stores by fascia
-    jdnaStoreData = await getLocations(requestId, storeEnv, fascia)
-  }
   logger('get-jdna-stores').debug({
     requestId,
     message: `Got stores`,
     extraInfo: {
-      fascia,
+      banner,
       storeEnv,
       stores: Array.from(jdnaStoreData.entries()),
     },
@@ -45,11 +44,11 @@ export const getJDNAStores = async ({
 
 export const getAdyenStores = async ({
   requestId,
-  fascia,
+  merchantId,
   storeEnv,
 }: {
   requestId: string
-  fascia: JDNAPropertyKey | 'all'
+  merchantId: string
   storeEnv: (typeof APP_ENVS)[number]
 }) => {
   const stores = (await fetchAdyenData({
@@ -57,26 +56,24 @@ export const getAdyenStores = async ({
     appEnv: storeEnv,
     opts: {
       type: 'stores',
-      merchantIds: fascia === 'all' ? undefined : JDNAProperty[fascia],
+      merchantIds: merchantId,
     },
   })) as AdyenStore[]
   return stores
 }
 
-export const processStores = async ({
+export const processJDNAStores = async ({
   requestId,
+  banner,
   jdnaStores,
   adyenStores,
 }: {
   requestId: string
+  banner: string
   jdnaStores: Awaited<ReturnType<typeof getJDNAStores>>
   adyenStores: AdyenStore[]
 }) => {
-  logger('process-jdna-stores').info({
-    requestId,
-    message: `Processing ${jdnaStores.size} stores`,
-  })
-  const items: InsertInternalStore[] = []
+  const items: neonSchema.InsertInternalStore[] = []
   const storeIds: string[] = []
 
   for (const [storeId, store] of jdnaStores.entries()) {
@@ -111,37 +108,128 @@ export const processStores = async ({
   // Add other common store processing here
 
   // Commit to the database
-  for (const banner of Object.keys(JDNAProperty)) {
-    const tmp = items.filter((item) => item.banner === banner.toUpperCase())
-    if (tmp.length === 0) {
-      logger('process-jdna-stores').debug({
-        requestId,
-        message: `No stores found for ${banner}`,
-      })
-      continue
-    }
-    const connString = process.env[`${banner.toUpperCase()}_DATABASE_URI`]
-    if (connString) {
-      const db = drizzle(connString, { schema: neonSchema })
-      await db.transaction(async (tx) => {
-        for (const item of tmp) {
-          await tx
-            .insert(neonSchema.stores)
-            .values(item)
-            .onConflictDoUpdate({
-              target: [neonSchema.stores.code],
-              set: item,
-            })
-        }
-      })
-      storeIds.push(...tmp.map((item) => item.code))
-    } else {
-      logger('process-jdna-stores').error({
-        requestId,
-        message: `No database connection string found for ${banner}`,
-      })
-    }
+  const tmp = items.filter((item) => item.banner === banner.toUpperCase())
+  if (tmp.length === 0) {
+    logger('process-jdna-stores').debug({
+      requestId,
+      message: `No stores found for ${banner}`,
+    })
+    return []
+  }
+  const { APP_NEON_DATABASE_URI } = process.env
+  if (!APP_NEON_DATABASE_URI) {
+    throw new AppError({
+      requestId,
+      name: 'DATABASE_CONFIG_MISSING',
+      message: `No database connection string found for ${banner}`,
+    })
+  }
+  try {
+    const db = neonDb(APP_NEON_DATABASE_URI, { schema: neonSchema })
+    await db.transaction(async (tx) => {
+      for (const item of tmp) {
+        await tx
+          .insert(neonSchema.stores)
+          .values(item)
+          .onConflictDoUpdate({
+            target: [neonSchema.stores.code],
+            set: item,
+          })
+      }
+    })
+    storeIds.push(...tmp.map((item) => item.code))
+  } catch (error) {
+    logger('process-jdna-stores').error({
+      requestId,
+      message: `Error processing stores for ${banner}`,
+      error,
+    })
+    throw new AppError({
+      requestId,
+      name: 'UPDATE_DATABASE',
+      message: `Error processing stores for ${banner}`,
+      cause: error,
+    })
   }
 
   return storeIds
+}
+
+export const processAdyenStores = async ({
+  requestId,
+  banner,
+  appEnv,
+}: {
+  requestId: string
+  banner: string
+  merchantId: string
+  appEnv: (typeof APP_ENVS)[number]
+}) => {
+  // Read all stores from the database using banner to determine which database to use
+  const { APP_NEON_DATABASE_URI } = process.env
+  if (!APP_NEON_DATABASE_URI) {
+    throw new AppError({
+      requestId,
+      name: 'DATABASE_CONFIG_MISSING',
+      message: `No database connection string found for ${banner}`,
+    })
+  }
+  try {
+    const db = neonDb(APP_NEON_DATABASE_URI, { schema: neonSchema })
+    const stores = await db.select().from(neonSchema.stores)
+    // Iterate over the stores and test for the following:
+    // 1. If the store has an adyenId, then we need to update the record in Adyen
+    // 2. If the store does not have an adyenId, then we need to create a new store in Adyen
+    // Be sure to update the database with the new adyenId and adyenReference
+    for (const store of stores) {
+      const adyenStore: AdyenStoreCreate = {
+        description: store.name,
+        shopperStatement: store.code,
+        phoneNumber: '+14108505911',
+        merchantId: store.adyenMerchantId!,
+        reference: store.code,
+        address: {
+          country: 'US',
+          line1: store.addressLine1!,
+          line2: store.addressLine2!,
+          city: store.addressCity!,
+          postalCode: store.addressZipCode!,
+          stateOrProvince: store.addressState!.trim().toUpperCase(),
+        },
+      }
+      if (store.adyenId && store.status) {
+        await updateAdyenStore(appEnv, store.adyenId, adyenStore)
+      } else if (!store.adyenId && store.status) {
+        const newStore = await createAdyenStore(appEnv, adyenStore)
+        await db
+          .update(neonSchema.stores)
+          .set({
+            adyenId: newStore.id,
+            adyenReference: newStore.reference,
+          })
+          .where(eq(neonSchema.stores.code, store.code))
+      } else if (store.adyenId && !store.status) {
+        await deactivateAdyenStore(appEnv, store.adyenId)
+        await db
+          .update(neonSchema.stores)
+          .set({
+            adyenId: null,
+            adyenReference: null,
+          })
+          .where(eq(neonSchema.stores.code, store.code))
+      }
+    }
+  } catch (error) {
+    logger('process-adyen-stores').error({
+      requestId,
+      message: `Error processing stores for ${banner}`,
+      error,
+    })
+    throw new AppError({
+      requestId,
+      name: 'PROCESS_ADYEN_STORES',
+      message: `Error processing stores for ${banner}`,
+      cause: error,
+    })
+  }
 }

@@ -1,1 +1,0 @@
-ALTER TABLE "terminals" ALTER COLUMN "store_id" DROP NOT NULL;

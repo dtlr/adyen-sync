@@ -8,6 +8,6 @@ await build({
   outdir: './dist',
   platform: 'node',
   plugins: [],
-  splitting: true,
+  splitting: false,
   treeShaking: true,
 })

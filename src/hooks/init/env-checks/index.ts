@@ -1,5 +1,5 @@
 import { type Hook } from '@oclif/core'
-import { logger } from '@/core/utils'
+import { logger } from '@util/logger.js'
 import { AppError } from '@/error.js'
 import 'dotenv/config'
 

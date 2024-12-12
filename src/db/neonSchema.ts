@@ -40,9 +40,9 @@ export const stores = pgTable(
     ...commonTime,
   },
   (t) => [
-    index('idx_code').on(t.code).concurrently(),
-    index('idx_district').on(t.district).concurrently(),
-    index('idx_region').on(t.region).concurrently(),
+    index('idx_code').on(t.code),
+    index('idx_district').on(t.district),
+    index('idx_region').on(t.region),
   ],
 )
 
@@ -79,12 +79,12 @@ export const terminals = pgTable(
     ...commonTime,
   },
   (t) => [
-    index('idx_serial_number').on(t.serialNumber).concurrently(),
-    index('idx_adyen_store_id').on(t.adyenStoreId).concurrently(),
-    index('idx_store_id').on(t.storeId).concurrently(),
-    index('idx_status').on(t.status).concurrently(),
-    index('idx_model').on(t.model).concurrently(),
-    index('idx_firmware_version').on(t.firmwareVersion).concurrently(),
+    index('idx_serial_number').on(t.serialNumber),
+    index('idx_adyen_store_id').on(t.adyenStoreId),
+    index('idx_store_id').on(t.storeId),
+    index('idx_status').on(t.status),
+    index('idx_model').on(t.model),
+    index('idx_firmware_version').on(t.firmwareVersion),
   ],
 )
 

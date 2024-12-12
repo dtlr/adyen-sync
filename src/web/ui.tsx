@@ -31,7 +31,7 @@ const Layout = (props: SiteData) =>
 const Content = (props: { siteData: SiteData }) => {
   return (
     <Layout {...props.siteData}>
-      <h1>Hello Hono!</h1>
+      <h1>Hello Hono UI!</h1>
     </Layout>
   )
 }

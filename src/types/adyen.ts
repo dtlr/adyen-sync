@@ -1,17 +1,4 @@
-import { localLocationSchema } from 'types'
 import { z } from 'zod'
-
-export type AdyenRecord = { id: string; merchantId: string }
-
-export const adyenLocationSchema = z.object({
-  id: z.string(),
-  value: localLocationSchema.omit({
-    location_short_name: true,
-    location_code: true,
-    active_flag: true,
-  }),
-})
-export type AdyenLocation = z.infer<typeof adyenLocationSchema>
 
 const adyenLinksSchema = z.object({
   first: z.object({
@@ -126,73 +113,67 @@ export const adyenTerminalBoardWebhook = z.object({
   }),
 })
 
-export type AdyenStoreCreate = {
-  id: string
-  address: {
-    country: string
-    line1: string
-    line2: string
-    line3: string
-    city: string
-    stateOrProvince: string
-    postalCode: string
-  }
-  description: string
-  merchantId: string
-  shopperStatement: string
-  phoneNumber: string
-  reference: string
-  status: string
-  _links: {
-    self: {
-      href: string
-    }
-  }
-}
+export const adyenStoreCreateSchema = z.object({
+  address: z.object({
+    country: z.string(),
+    line1: z.string(),
+    line2: z.string(),
+    line3: z.string().optional(),
+    city: z.string(),
+    stateOrProvince: z.string(),
+    postalCode: z.string(),
+  }),
+  description: z.string(),
+  merchantId: z.string(),
+  shopperStatement: z.string(),
+  phoneNumber: z.string(),
+  reference: z.string(),
+})
+export type AdyenStoreCreate = z.infer<typeof adyenStoreCreateSchema>
 
-export type AdyenStoresReturn = {
-  _links: {
-    first?: {
-      href: string
-    }
-    last?: {
-      href: string
-    }
-    next?: {
-      href: string
-    }
-    self: {
-      href: string
-    }
-  }
-  itemsTotal: number
-  pagesTotal: number
-  data: {
-    address: {
-      city: string
-      line1: string
-      postalCode: string
-      stateOrProvince: string
-      country: string
-    }
-    description: string
-    externalReferenceId: string
-    merchantId: string
-    phoneNumber: string
-    reference: string
-    shopperStatement: string
-    status: string
-    id: string
-    _links: {
-      first?: {
-        href: string
-      }
-      last?: {
-        href: string
-      }
-      self: {
-        href: string
-      }
-    }
-  }[]
-}
+export const adyenStoresReturnSchema = z.object({
+  _links: z.object({
+    first: z.object({
+      href: z.string(),
+    }),
+    last: z.object({
+      href: z.string(),
+    }),
+    next: z.object({
+      href: z.string(),
+    }),
+    self: z.object({
+      href: z.string(),
+    }),
+  }),
+  itemsTotal: z.number(),
+  pagesTotal: z.number(),
+  data: z.array(
+    z.object({
+      address: z.object({
+        city: z.string(),
+        line1: z.string(),
+        postalCode: z.string(),
+        stateOrProvince: z.string(),
+        country: z.string(),
+      }),
+      description: z.string(),
+      externalReferenceId: z.string(),
+      merchantId: z.string(),
+      phoneNumber: z.string(),
+      reference: z.string(),
+      shopperStatement: z.string(),
+      status: z.string(),
+      id: z.string(),
+      _links: z.object({
+        first: z.object({
+          href: z.string(),
+        }),
+        self: z.object({
+          href: z.string(),
+        }),
+      }),
+    }),
+  ),
+})
+export type AdyenStoresReturn = z.infer<typeof adyenStoresReturnSchema>
