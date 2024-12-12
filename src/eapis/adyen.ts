@@ -1,5 +1,6 @@
 import { logger } from '@util/logger.js'
 import axios from 'axios'
+import { type NestedOmit } from 'types'
 import {
   type AdyenStoreCreate,
   type AdyenStore,
@@ -10,7 +11,6 @@ import {
 
 import { type APP_ENVS } from '@/constants'
 import { AppError } from '@/error.js'
-import { NestedOmit } from 'types'
 
 const adyenConfig = (appEnv: (typeof APP_ENVS)[number]) => {
   const { ADYEN_KEY, ADYEN_KEY_LIVE, ADYEN_KEY_TEST } = process.env

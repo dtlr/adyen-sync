@@ -4,12 +4,12 @@ import { createAdyenStore, deactivateAdyenStore, updateAdyenStore } from '@eapis
 import { getLocations } from '@eapis/jdna.js'
 import { parseStoreRef } from '@util'
 import { logger } from '@util/logger.js'
+import { AxiosError } from 'axios'
 import { eq } from 'drizzle-orm'
 import { type AdyenStoreCreate, type AdyenStore } from 'types/adyen.js'
 import { type APP_ENVS } from '@/constants.js'
 import { AppError } from '@/error.js'
 import 'dotenv/config'
-import { AxiosError } from 'axios'
 
 export const getJDNAStores = async ({
   requestId,
