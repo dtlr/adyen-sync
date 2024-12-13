@@ -1,101 +1,15 @@
-import { Hono } from 'hono'
-import { html } from 'hono/html'
+import { createFactory } from 'hono/factory'
+import { App } from './components/App.jsx'
 
-interface SiteData {
-  title: string
-  children?: unknown
-}
+const factory = createFactory()
+const ui = factory.createApp()
 
-const Layout = (props: SiteData) =>
-  html`<!doctype html>
-    <html lang="en" data-theme="dark">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="JDNA Sync" />
-        <meta name="author" content="DTLR" />
-        <meta name="keywords" content="JDNA, Sync, Terminals, Stores" />
-        <meta name="robots" content="noindex, nofollow" />
-        <meta name="color-scheme" content="light dark" />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
-        />
-        <title>${props.title}</title>
-      </head>
-      <body>
-        <main class="container">${props.children}</main>
-      </body>
-    </html>`
+ui.get('/', (c) => c.html(<App />))
+ui.get('/stores', (c) => c.html(<App />))
+ui.get('/stores/:id', (c) => c.html(<App />))
+ui.get('/stores/:id/terminals', (c) => c.html(<App />))
 
-const Content = (props: { siteData: SiteData }) => {
-  return (
-    <Layout {...props.siteData}>
-      <h1>Hello Hono UI!</h1>
-    </Layout>
-  )
-}
-
-const ui = new Hono()
-  .get('/', (c) => {
-    const props = {
-      siteData: {
-        title: 'JDNA Sync',
-      },
-    }
-    return c.html(<Content {...props} />)
-  })
-  .get('/stores', (c) => {
-    const props = {
-      siteData: {
-        title: 'JDNA Sync | Stores',
-      },
-    }
-    return c.html(<Content {...props} />)
-  })
-  .get('/stores/:storeId', (c) => {
-    const { storeId } = c.req.param()
-    const props = {
-      siteData: {
-        title: `JDNA Sync | Store ${storeId}`,
-      },
-    }
-    return c.html(<Content {...props} />)
-  })
-  .get('/stores/:storeId/terminals', (c) => {
-    const { storeId } = c.req.param()
-    const props = {
-      siteData: {
-        title: `JDNA Sync | Store ${storeId} | Terminals`,
-      },
-    }
-    return c.html(<Content {...props} />)
-  })
-  .get('/stores/:storeId/terminals/:terminalId', (c) => {
-    const { storeId, terminalId } = c.req.param()
-    const props = {
-      siteData: {
-        title: `JDNA Sync | Store ${storeId} | Terminal ${terminalId}`,
-      },
-    }
-    return c.html(<Content {...props} />)
-  })
-  .get('/terminals', (c) => {
-    const props = {
-      siteData: {
-        title: 'JDNA Sync | Terminals',
-      },
-    }
-    return c.html(<Content {...props} />)
-  })
-  .get('/terminals/:terminalId', (c) => {
-    const { terminalId } = c.req.param()
-    const props = {
-      siteData: {
-        title: `JDNA Sync | Terminal ${terminalId}`,
-      },
-    }
-    return c.html(<Content {...props} />)
-  })
+ui.get('/terminals', (c) => c.html(<App />))
+ui.get('/terminals/:id', (c) => c.html(<App />))
 
 export default ui
