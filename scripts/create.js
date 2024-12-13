@@ -42,7 +42,9 @@ let branchId
 
 // Get current git branch name
 const { execSync } = await import('child_process')
-const currentBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim()
+const currentBranch =
+  process.env.GITHUB_REF_NAME.split('/')[2] ||
+  execSync('git rev-parse --abbrev-ref HEAD').toString().trim()
 console.info(`Current git branch: ${currentBranch}`)
 
 for (const banner of BANNERS) {

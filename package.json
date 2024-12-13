@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "neon:create": "node scripts/create.js",
-    "neon:generate": "node scripts/generate.js",
+    "neon:generate": "drizzle-kit generate",
     "neon:migrate": "node scripts/migrate.js",
     "prettify": "prettier --write --ignore-unknown .",
     "test": "vitest"
@@ -58,6 +58,8 @@
   "devDependencies": {
     "@eslint/compat": "^1.2.4",
     "@eslint/plugin-kit": ">= 0.2.3",
+    "@hono/vite-build": "^1.1.1",
+    "@hono/vite-dev-server": "^0.17.0",
     "@nwlnexus/config": "^1",
     "@types/node": "^20",
     "@types/pg": "^8",
@@ -73,6 +75,7 @@
     "ts-node": "^10.9.2",
     "tsx": "^4",
     "typescript": "^5",
+    "vite": "^5.4.11",
     "vite-tsconfig-paths": "^5",
     "vitest": "^2"
   },
