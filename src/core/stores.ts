@@ -170,6 +170,7 @@ export const processJDNAStores = async ({
 export const processAdyenStores = async ({
   requestId,
   banner,
+  merchantId,
   appEnv,
 }: {
   requestId: string
@@ -200,12 +201,12 @@ export const processAdyenStores = async ({
         description: store.name,
         shopperStatement: store.code,
         phoneNumber: '+14108505911',
-        merchantId: store.adyenMerchantId!,
+        merchantId,
         reference: store.code,
         address: {
           country: 'US',
           line1: store.addressLine1!,
-          line2: store.addressLine2!,
+          line2: store.addressLine2 || undefined,
           city: store.addressCity!,
           postalCode: store.addressZipCode!,
           stateOrProvince: store.addressState!.trim().toUpperCase(),
