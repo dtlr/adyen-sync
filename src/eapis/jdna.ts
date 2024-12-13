@@ -3,20 +3,24 @@ import { type LocationLocal, localLocationSchema } from 'types'
 import { type APP_ENVS } from '@/constants.js'
 import { AppError } from '@/error.js'
 
-export const getLocations = async (
-  requestId: string,
-  storeEnv: (typeof APP_ENVS)[number],
-  banner?: string,
-) => {
+export const getJDNAStores = async ({
+  requestId,
+  appEnv,
+  banner,
+}: {
+  requestId: string
+  appEnv: (typeof APP_ENVS)[number]
+  banner?: string
+}) => {
   const { LOCATIONSAPI_URL, LOCATIONSAPI_CLIENT_ID, LOCATIONSAPI_CLIENT_SECRET } = process.env
 
-  logger('get-locations').debug({
+  logger('get-jdna-stores').debug({
     requestId,
-    message: `Getting locations for fascia: ${banner}`,
+    message: `Getting stores for appEnv: ${appEnv}`,
     extraInfo: {
-      function: 'getLocations',
+      function: 'getJDNAStores',
       banner,
-      storeEnv,
+      appEnv,
     },
   })
 
@@ -26,7 +30,7 @@ export const getLocations = async (
       message:
         'LOCATIONSAPI_URL, LOCATIONSAPI_CLIENT_ID, and LOCATIONSAPI_CLIENT_SECRET must be set',
       cause: {
-        function: 'getLocations',
+        function: 'getJDNAStores',
       },
     })
   }
@@ -59,13 +63,13 @@ export const getLocations = async (
   }
   const data = (await locResponse.json()) as unknown as Array<unknown>
 
-  logger('get-locations').debug({
+  logger('get-jdna-stores').debug({
     requestId,
-    message: `Got ${data.length} locations`,
+    message: `Got ${data.length} stores`,
     extraInfo: {
-      function: 'getLocations',
+      function: 'getJDNAStores',
       banner,
-      storeEnv,
+      appEnv,
       data,
     },
   })
@@ -73,16 +77,16 @@ export const getLocations = async (
   for (const loc of data) {
     const tmpLoc = localLocationSchema.safeParse(loc)
     if (!tmpLoc.success) {
-      logger('get-locations').error({
+      logger('get-jdna-stores').error({
         requestId,
         message: tmpLoc.error.message,
         cause: {
           errors: tmpLoc.error.errors,
         },
         extraInfo: {
-          function: 'getLocations',
+          function: 'getJDNAStores',
           banner,
-          storeEnv,
+          appEnv,
           loc,
         },
       })
@@ -107,7 +111,7 @@ export const getLocations = async (
       ]
       const otherLocs = ['6000', '6001', '7001', '7777', '8001', '8002', '8888']
       locs_filtered =
-        storeEnv && storeEnv.toLowerCase() === 'live'
+        appEnv && appEnv.toLowerCase() === 'live'
           ? locations.filter(
               (item) =>
                 !closedLocs.includes(item.location_code) &&
@@ -125,7 +129,7 @@ export const getLocations = async (
     }
     default: {
       locs_filtered =
-        storeEnv && storeEnv.toLowerCase() === 'live'
+        appEnv && appEnv.toLowerCase() === 'live'
           ? locations.filter(
               (item) =>
                 item.region !== 'Distribution Center' &&
@@ -156,13 +160,13 @@ export const getLocations = async (
     }
   })
 
-  logger('get-locations').debug({
+  logger('get-jdna-stores').debug({
     requestId,
-    message: `Got ${locationsMap.size} locations`,
+    message: `Got ${locationsMap.size} stores`,
     extraInfo: {
-      function: 'getLocations',
+      function: 'getJDNAStores',
       banner,
-      storeEnv,
+      appEnv,
       data: Array.from(locationsMap.entries()),
     },
   })

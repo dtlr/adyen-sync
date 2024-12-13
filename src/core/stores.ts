@@ -1,7 +1,7 @@
 import { neonDb } from '@core/db'
 import * as neonSchema from '@db/neonSchema.js'
 import { createAdyenStore, deactivateAdyenStore, updateAdyenStore } from '@eapis/adyen.js'
-import { getLocations } from '@eapis/jdna.js'
+import { type getJDNAStores } from '@eapis/jdna.js'
 import { parseStoreRef } from '@util'
 import { logger } from '@util/logger.js'
 import { AxiosError } from 'axios'
@@ -10,33 +10,6 @@ import { type AdyenStoreCreate, type AdyenStore, type AdyenStoreUpdate } from 't
 import { type APP_ENVS } from '@/constants.js'
 import { AppError } from '@/error.js'
 import 'dotenv/config'
-
-export const getJDNAStores = async ({
-  requestId,
-  banner,
-  storeEnv,
-}: {
-  requestId: string
-  banner: string
-  storeEnv: (typeof APP_ENVS)[number]
-}) => {
-  logger('get-jdna-stores').debug({
-    requestId,
-    message: `Syncing stores for banner: ${banner}`,
-  })
-  const jdnaStoreData = await getLocations(requestId, storeEnv, banner)
-
-  logger('get-jdna-stores').debug({
-    requestId,
-    message: `Got stores`,
-    extraInfo: {
-      banner,
-      storeEnv,
-      stores: Array.from(jdnaStoreData.entries()),
-    },
-  })
-  return jdnaStoreData
-}
 
 export const processJDNAStores = async ({
   requestId,
@@ -49,7 +22,8 @@ export const processJDNAStores = async ({
   jdnaStores: Awaited<ReturnType<typeof getJDNAStores>>
   adyenStores: AdyenStore[]
 }) => {
-  const items: neonSchema.InsertInternalStore[] = []
+  const newStores: neonSchema.InsertInternalStore[] = []
+  const updatedStores: neonSchema.InsertInternalStore[] = []
   const storeIds: string[] = []
 
   logger('process-jdna-stores').debug({
@@ -68,6 +42,18 @@ export const processJDNAStores = async ({
     },
   })
 
+  const { APP_NEON_DATABASE_URI } = process.env
+  if (!APP_NEON_DATABASE_URI) {
+    throw new AppError({
+      requestId,
+      name: 'DATABASE_CONFIG_MISSING',
+      message: `No database connection string found for ${banner}`,
+    })
+  }
+
+  const db = neonDb(APP_NEON_DATABASE_URI, { schema: neonSchema })
+  const jdnaStoreData = await db.select().from(neonSchema.stores)
+
   for (const [storeId, store] of jdnaStores.entries()) {
     const storeRef = parseStoreRef(storeId)
 
@@ -83,16 +69,8 @@ export const processJDNAStores = async ({
       continue
     }
 
-    // logger('process-jdna-stores').debug({
-    //   requestId,
-    //   message: `Processing store ${storeId}`,
-    //   extraInfo: {
-    //     storeId,
-    //     adyenReferences: adyenStores.map((adyenStore) => adyenStore.reference),
-    //   },
-    // })
-
-    items.push({
+    const existingStore = jdnaStoreData.find((s) => s.code === storeId)
+    const item = {
       code: storeId,
       aptosStoreCode: storeRef.number,
       addressCity: store.addresses[0].address_city,
@@ -117,46 +95,61 @@ export const processJDNAStores = async ({
       adyenStatus: adyenStores.find((adyenStore) => adyenStore.reference === storeId)?.status,
       adyenDescription: adyenStores.find((adyenStore) => adyenStore.reference === storeId)
         ?.description,
-    })
+      updatedAt: new Date(),
+      deletedAt: store.active_flag ? null : new Date(),
+    }
+
+    if (existingStore) {
+      // If store exists, compare to see if it has changed
+      const hasChanges = Object.entries(item).some(([key, value]) => {
+        // Skip updatedAt since it's always different
+        if (['updatedAt', 'createdAt', 'deletedAt'].includes(key)) return false
+        return (
+          JSON.stringify(value) !== JSON.stringify(existingStore[key as keyof typeof existingStore])
+        )
+      })
+
+      if (hasChanges) {
+        updatedStores.push(item)
+      } else {
+        logger('process-jdna-stores').debug({
+          requestId,
+          message: `No changes detected for store ${storeId}`,
+          extraInfo: { storeId },
+        })
+      }
+      continue
+    } else {
+      newStores.push(item)
+    }
   }
 
   // Add other common store processing here
 
   // Commit to the database
-  const tmp = items.filter((item) => item.banner === banner.toUpperCase())
+  const filteredNewStores = newStores.filter((item) => item.banner === banner.toUpperCase())
+  const filteredUpdatedStores = updatedStores.filter((item) => item.banner === banner.toUpperCase())
   logger('process-jdna-stores').debug({
     requestId,
-    message: `Processing ${tmp.length} stores for ${banner}`,
+    message: `Processing ${filteredNewStores.length} new stores and ${filteredUpdatedStores.length} updated stores for ${banner}`,
   })
-  if (tmp.length === 0) {
+  if (filteredNewStores.length === 0 && filteredUpdatedStores.length === 0) {
     logger('process-jdna-stores').debug({
       requestId,
-      message: `No stores found for ${banner}`,
+      message: `No new or updated stores found for ${banner}`,
     })
     return []
   }
-  const { APP_NEON_DATABASE_URI } = process.env
-  if (!APP_NEON_DATABASE_URI) {
-    throw new AppError({
-      requestId,
-      name: 'DATABASE_CONFIG_MISSING',
-      message: `No database connection string found for ${banner}`,
-    })
-  }
   try {
-    const db = neonDb(APP_NEON_DATABASE_URI, { schema: neonSchema })
     await db.transaction(async (tx) => {
-      for (const item of tmp) {
-        await tx
-          .insert(neonSchema.stores)
-          .values(item)
-          .onConflictDoUpdate({
-            target: [neonSchema.stores.code],
-            set: item,
-          })
+      for (const item of filteredNewStores) {
+        await tx.insert(neonSchema.stores).values(item)
+      }
+      for (const item of filteredUpdatedStores) {
+        await tx.update(neonSchema.stores).set(item).where(eq(neonSchema.stores.code, item.code))
       }
     })
-    storeIds.push(...tmp.map((item) => item.code))
+    storeIds.push(...filteredNewStores.map((item) => item.code))
   } catch (error) {
     logger('process-jdna-stores').error({
       requestId,
@@ -220,7 +213,10 @@ export const processAdyenStores = async ({
       }
       currentItem = store
       currentItemParsed = adyenStore
-      if (store.adyenId && store.status) {
+
+      // Check if store was updated in the last 8 hours
+      const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000)
+      if (store.adyenId && store.status && store.updatedAt && store.updatedAt > eightHoursAgo) {
         logger('process-adyen-stores').info({
           requestId,
           message: 'Updating store',

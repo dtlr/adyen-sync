@@ -6,6 +6,9 @@ on:
       - qa
       - main
     paths:
+      - 'bin/create'
+      - 'bin/generate'
+      - 'bin/migrate'
       - 'scripts/**'
       - 'property.json'
   workflow_dispatch:

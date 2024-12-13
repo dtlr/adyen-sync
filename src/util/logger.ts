@@ -1,4 +1,5 @@
 import { config, createLogger as createWinstonLogger, transports, format } from 'winston'
+import 'dotenv/config'
 
 export const createLogger = (context?: string) =>
   createWinstonLogger({
