@@ -1,6 +1,7 @@
 import { migrateDb } from '@core/migrate'
-import { getJDNAStores, processAdyenStores, processJDNAStores } from '@core/process/stores.js'
+import { processAdyenStores, processJDNAStores } from '@core/stores.js'
 import { getAdyenStores } from '@eapis/adyen.js'
+import { getJDNAStores } from '@eapis/jdna.js'
 import { logger } from '@util/logger.js'
 import { SyncBaseCommand } from '@/base-cmds/sync-base-command.js'
 import { type APP_ENVS } from '@/constants.js'
@@ -46,8 +47,8 @@ export class SyncStoresCommand extends SyncBaseCommand<typeof SyncStoresCommand>
 
       const jdnaStores = await getJDNAStores({
         requestId: flags.requestId,
+        appEnv: flags['app-env'] as (typeof APP_ENVS)[number],
         banner: flags.banner[idx],
-        storeEnv: flags['app-env'] as (typeof APP_ENVS)[number],
       })
       const adyenStores = await getAdyenStores({
         requestId: flags.requestId,

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# Execute ../scripts/generate.js with all passed arguments
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+node --loader ts-node/esm --no-warnings=ExperimentalWarning "$DIR/../scripts/generate.js" "$@"

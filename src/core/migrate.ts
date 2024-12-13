@@ -1,8 +1,13 @@
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import * as neonSchema from '@db/neonSchema.js'
 import { migrate } from 'drizzle-orm/neon-serverless/migrator'
 import { neonDb } from './db'
 import { AppError } from '@/error'
 import 'dotenv/config'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 export const migrateDb = async (requestId: string, banner: string) => {
   const { APP_NEON_DATABASE_URI } = process.env
@@ -22,7 +27,7 @@ export const migrateDb = async (requestId: string, banner: string) => {
   })
 
   const fs = await import('node:fs')
-  const migrationsPath = `./drizzle/${banner}`
+  const migrationsPath = `./drizzle`
 
   if (!fs.existsSync(migrationsPath)) {
     throw new AppError({
@@ -36,5 +41,21 @@ export const migrateDb = async (requestId: string, banner: string) => {
     })
   }
 
-  await migrate(db, { migrationsFolder: `./drizzle/${banner}` })
+  try {
+    await migrate(db, { migrationsFolder: `./drizzle` })
+  } catch (error) {
+    throw new AppError({
+      requestId,
+      name: 'DATABASE_CONFIG_MISSING',
+      message: `Failed to migrate database for ${banner}`,
+      cause: {
+        file: __filename,
+        dir: __dirname,
+        banner,
+        context: 'migrateDb',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'Unknown stack',
+      },
+    })
+  }
 }

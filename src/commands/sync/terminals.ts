@@ -1,5 +1,5 @@
 import { migrateDb } from '@core/migrate'
-import { processTerminals, updateJMDatabase } from '@core/process/terminals.js'
+import { processTerminals, updateJMDatabase } from '@core/terminals.js'
 import { getAdyenTerminals } from '@eapis/adyen'
 import { logger } from '@util/logger.js'
 import { SyncBaseCommand } from '@/base-cmds/sync-base-command.js'

@@ -1,5 +1,6 @@
-import { getJDNAStores, processJDNAStores } from '@core/process/stores.js'
-import { getAdyenStores } from '@eapis/adyen'
+import { processJDNAStores } from '@core/stores.js'
+import { getAdyenStores } from '@eapis/adyen.js'
+import { getJDNAStores } from '@eapis/jdna.js'
 import { logger } from '@util/logger.js'
 import { Hono } from 'hono'
 import { env } from 'hono/adapter'
@@ -35,8 +36,8 @@ const apiV2 = new Hono()
       case 'stores': {
         const jdnaStores = await getJDNAStores({
           requestId,
+          appEnv: APP_ENV,
           banner,
-          storeEnv: APP_ENV,
         })
         const adyenStores = await getAdyenStores({
           requestId,
