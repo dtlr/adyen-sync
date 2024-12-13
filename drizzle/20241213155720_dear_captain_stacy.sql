@@ -1,3 +1,4 @@
+-- Custom SQL migration file, put your code below! --
 -- Create trigger function
 CREATE OR REPLACE FUNCTION update_store_deleted_at()
 RETURNS TRIGGER AS $$
@@ -12,7 +13,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger
-CREATE TRIGGER store_status_trigger
+CREATE OR REPLACE TRIGGER store_status_trigger
     BEFORE UPDATE OF status ON stores
     FOR EACH ROW
     EXECUTE FUNCTION update_store_deleted_at();

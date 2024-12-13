@@ -1,24 +1,24 @@
-import { execSync } from 'child_process'
-import { existsSync, readFileSync, writeFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import { execSync } from 'node:child_process'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import { drizzleConfigSingle } from '../templates/drizzle-config.js'
+import { drizzleConfig } from '../templates/drizzle-config.js'
 // import { githubWorkflow } from '../templates/github-workflow.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'))
+const pkg = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8'))
 
 const scriptName = pkg.name.replace(/-/g, '_')
 
 ;(async () => {
-  const path = __dirname
-  const file = 'drizzle.config.ts'
+  const configDir = resolve(__dirname, '../')
+  const configFile = 'drizzle.config.js'
   const envVarName = `APP_NEON_DATABASE_URI`
 
-  const newContent = drizzleConfigSingle(envVarName)
-  const filePath = `${path}/${file}`
+  const newContent = drizzleConfig(envVarName)
+  const filePath = resolve(configDir, configFile)
 
   console.info('Set drizzle config')
   if (existsSync(filePath)) {

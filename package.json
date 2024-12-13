@@ -14,7 +14,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "neon:create": "node scripts/create.js",
-    "neon:generate": "drizzle-kit generate",
+    "neon:generate": "node scripts/generate.js",
     "neon:migrate": "node scripts/migrate.js",
     "prettify": "prettier --write --ignore-unknown .",
     "test": "vitest"
