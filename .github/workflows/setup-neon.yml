@@ -83,6 +83,14 @@ jobs:
           APP_NEON_DATABASE_URI: ${{ steps.load_secrets.outputs.APP_NEON_DATABASE_URI }}
         run: npm run neon:generate
 
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add drizzle || true
+          git commit -m "Adding migrations on branch ${{ github.ref_name }}"
+          git push
+
   neon-migrate:
     runs-on: ubuntu-latest
     needs: [env-setup, neon-setup]
