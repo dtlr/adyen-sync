@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { drizzleConfig } from '../templates/drizzle-config.js'
+import { drizzleConfigSingle } from '../templates/drizzle-config.js'
 // import { githubWorkflow } from '../templates/github-workflow.js'
 
 const __filename = fileURLToPath(import.meta.url)
